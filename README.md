@@ -1,4 +1,5 @@
-BattleChess3D
-=============
-
-Battle Chess 3D is school game project.
+Tools:
+Visual Studio 2012 (C++11)
+GitHub
+Ogre 3D
+Doxygen?
