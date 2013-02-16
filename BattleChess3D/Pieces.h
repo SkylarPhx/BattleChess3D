@@ -1,4 +1,3 @@
-#include "ConsoleColor.h"
 #include "stdafx.h"
 using namespace std;
 
@@ -11,6 +10,8 @@ class Piece
 {
 public:
 	Owner owner;
+	// Location on the chess board.
+	short row, col;
 
 	virtual void debugPrint()=0;
 };
@@ -18,9 +19,11 @@ public:
 class King: public Piece
 {
 public:
-	King(Owner o)
+	King(Owner o, short r, short c)
 	{
 		owner = o;
+		row = r;
+		col = c;
 	}
 	~King(){}
 
@@ -33,9 +36,11 @@ public:
 class Queen: public Piece
 {
 public:
-	Queen(Owner o)
+	Queen(Owner o, short r, short c)
 	{
 		owner = o;
+		row = r;
+		col = c;
 	}
 	~Queen(){}
 
@@ -48,9 +53,11 @@ public:
 class Rook: public Piece
 {
 public:
-	Rook(Owner o)
+	Rook(Owner o, short r, short c)
 	{
 		owner = o;
+		row = r;
+		col = c;
 	}
 	~Rook(){}
 
@@ -63,9 +70,11 @@ public:
 class Bishop: public Piece
 {
 public:
-	Bishop(Owner o)
+	Bishop(Owner o, short r, short c)
 	{
 		owner = o;
+		row = r;
+		col = c;
 	}
 	~Bishop(){}
 
@@ -78,9 +87,11 @@ public:
 class Knight: public Piece
 {
 public:
-	Knight(Owner o)
+	Knight(Owner o, short r, short c)
 	{
 		owner = o;
+		row = r;
+		col = c;
 	}
 	~Knight(){}
 
@@ -93,9 +104,11 @@ public:
 class Pawn: public Piece
 {
 public:
-	Pawn(Owner o)
+	Pawn(Owner o, short r, short c)
 	{
 		owner = o;
+		row = r;
+		col = c;
 	}
 	~Pawn(){}
 

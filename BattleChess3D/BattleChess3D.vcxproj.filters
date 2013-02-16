@@ -27,10 +27,10 @@
     <ClInclude Include="Position.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Pawns.h">
+    <ClInclude Include="ConsoleColor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ConsoleColor.h">
+    <ClInclude Include="Pieces.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
