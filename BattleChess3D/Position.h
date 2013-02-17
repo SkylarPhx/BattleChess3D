@@ -11,7 +11,7 @@ public:
 	Move(){}
 	~Move(){}
 
-	void setMove(string command)
+	void setMove(string &command)
 	{
 		fromCol = command[0] - 65;
 		fromRow = command[1] - 49;
@@ -123,6 +123,28 @@ public:
 
 	void executeMove(Move &m)
 	{
+		Piece* from = board[m.fromRow][m.fromCol];
+		Piece* to = board[m.toRow][m.toCol];
+		if(to != NULL)
+		{
+			// Delete eatable chess piece.
+			if(to->owner == BLACK)
+			{
+				blackPieces.remove(to);
+			}
+			else
+			{
+				whitePieces.remove(to);
+			}
+			delete to;
+		}
+		if(from != NULL)
+		{
+			// Change the location of movable chess piece.
+			from->row = m.toRow;
+			from->col = m.toCol;
+		}
+		// Change pointers to chess pieces on the chess board.
 		board[m.toRow][m.toCol] = board[m.fromRow][m.fromCol];
 		board[m.fromRow][m.fromCol] = NULL;
 	}
@@ -167,5 +189,20 @@ public:
 			cout << greyBlack << " " << (i + 1) << endl;
 		}
 		cout << "    A  B  C  D  E  F  G  H" << endl;
+
+		cout << "\n White" << endl;
+		for(auto &p: whitePieces)
+		{
+			p->debugPrint();
+			cout << (char)(p->col + 65) << (p->row + 1) << " ";
+		}
+		
+		cout << "\n\n Black" << endl;
+		for(auto &p: blackPieces)
+		{
+			p->debugPrint();
+			cout << (char)(p->col + 65) << (p->row + 1) << " ";
+		}
+		cout << endl;
 	}
 };
