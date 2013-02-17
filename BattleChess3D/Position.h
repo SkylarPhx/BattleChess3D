@@ -23,34 +23,19 @@ public:
 class Position
 {
 private:
-	list<Piece*> whitePieces, blackPieces;
+	list<Piece> whitePieces, blackPieces;
 	// Chess board which contais pointers to pieces.
 	// If a square doesn't have a piece on it, it'll point to NULL.
 	array<array<Piece*, 8>, 8> board;
 
-	enum
-	{
-		A, B, C, D, E, F, G, H
-	};
-	
-	enum
-	{
-		R1, R2, R3, R4, R5, R6, R7, R8
-	};
-
 public:
-	Position()
+	Position(){}
+	Position(Position &p)
 	{
+		copyPosition(p);
 	}
 
-	~Position()
-	{
-		for(auto &p: whitePieces)
-			delete p;
-		
-		for(auto &p: blackPieces)
-			delete p;
-	}
+	~Position(){}
 
 	// Removes all Pieces from the chess board.
 	void clear()
@@ -69,75 +54,88 @@ public:
 	{
 		clear();
 		// Assigning chess pieces to players.
-		whitePieces.push_back(new King(WHITE, R1, E));
-		whitePieces.push_back(new Queen(WHITE, R1, D));
-		whitePieces.push_back(new Rook(WHITE, R1, A));
-		whitePieces.push_back(new Rook(WHITE, R1, H));
-		whitePieces.push_back(new Bishop(WHITE, R1, C));
-		whitePieces.push_back(new Bishop(WHITE, R1, F));
-		whitePieces.push_back(new Knight(WHITE, R1, B));
-		whitePieces.push_back(new Knight(WHITE, R1, G));
-		whitePieces.push_back(new Pawn(WHITE, R2, A));
-		whitePieces.push_back(new Pawn(WHITE, R2, B));
-		whitePieces.push_back(new Pawn(WHITE, R2, C));
-		whitePieces.push_back(new Pawn(WHITE, R2, D));
-		whitePieces.push_back(new Pawn(WHITE, R2, E));
-		whitePieces.push_back(new Pawn(WHITE, R2, F));
-		whitePieces.push_back(new Pawn(WHITE, R2, G));
-		whitePieces.push_back(new Pawn(WHITE, R2, H));
+		whitePieces.emplace_back(WHITE, KING, R1, E);
+		whitePieces.emplace_back(WHITE, QUEEN, R1, D);
+		whitePieces.emplace_back(WHITE, ROOK, R1, A);
+		whitePieces.emplace_back(WHITE, ROOK, R1, H);
+		whitePieces.emplace_back(WHITE, BISHOP, R1, C);
+		whitePieces.emplace_back(WHITE, BISHOP, R1, F);
+		whitePieces.emplace_back(WHITE, KNIGHT, R1, B);
+		whitePieces.emplace_back(WHITE, KNIGHT, R1, G);
+		whitePieces.emplace_back(WHITE, PAWN, R2, A);
+		whitePieces.emplace_back(WHITE, PAWN, R2, B);
+		whitePieces.emplace_back(WHITE, PAWN, R2, C);
+		whitePieces.emplace_back(WHITE, PAWN, R2, D);
+		whitePieces.emplace_back(WHITE, PAWN, R2, E);
+		whitePieces.emplace_back(WHITE, PAWN, R2, F);
+		whitePieces.emplace_back(WHITE, PAWN, R2, G);
+		whitePieces.emplace_back(WHITE, PAWN, R2, H);
 
 		for(auto &p: whitePieces)
 		{
-			board[p->row][p->col] = p;
+			board[p.row][p.col] = &p;
 		}
 
-		blackPieces.push_back(new King(BLACK, R8, E));
-		blackPieces.push_back(new Queen(BLACK, R8, D));
-		blackPieces.push_back(new Rook(BLACK, R8, A));
-		blackPieces.push_back(new Rook(BLACK, R8, H));
-		blackPieces.push_back(new Bishop(BLACK, R8, C));
-		blackPieces.push_back(new Bishop(BLACK, R8, F));
-		blackPieces.push_back(new Knight(BLACK, R8, B));
-		blackPieces.push_back(new Knight(BLACK, R8, G));
-		blackPieces.push_back(new Pawn(BLACK, R7, A));
-		blackPieces.push_back(new Pawn(BLACK, R7, B));
-		blackPieces.push_back(new Pawn(BLACK, R7, C));
-		blackPieces.push_back(new Pawn(BLACK, R7, D));
-		blackPieces.push_back(new Pawn(BLACK, R7, E));
-		blackPieces.push_back(new Pawn(BLACK, R7, F));
-		blackPieces.push_back(new Pawn(BLACK, R7, G));
-		blackPieces.push_back(new Pawn(BLACK, R7, H));
+		blackPieces.emplace_back(BLACK, KING, R8, E);
+		blackPieces.emplace_back(BLACK, QUEEN, R8, D);
+		blackPieces.emplace_back(BLACK, ROOK, R8, A);
+		blackPieces.emplace_back(BLACK, ROOK, R8, H);
+		blackPieces.emplace_back(BLACK, BISHOP, R8, C);
+		blackPieces.emplace_back(BLACK, BISHOP, R8, F);
+		blackPieces.emplace_back(BLACK, KNIGHT, R8, B);
+		blackPieces.emplace_back(BLACK, KNIGHT, R8, G);
+		blackPieces.emplace_back(BLACK, PAWN, R7, A);
+		blackPieces.emplace_back(BLACK, PAWN, R7, B);
+		blackPieces.emplace_back(BLACK, PAWN, R7, C);
+		blackPieces.emplace_back(BLACK, PAWN, R7, D);
+		blackPieces.emplace_back(BLACK, PAWN, R7, E);
+		blackPieces.emplace_back(BLACK, PAWN, R7, F);
+		blackPieces.emplace_back(BLACK, PAWN, R7, G);
+		blackPieces.emplace_back(BLACK, PAWN, R7, H);
 
 		for(auto &p: blackPieces)
 		{
-			board[p->row][p->col] = p;
+			board[p.row][p.col] = &p;
 		}
 	}
 
 	void copyPosition(Position &p)
 	{
+		clear();
+
 		whitePieces = p.whitePieces;
+		for(auto &p: whitePieces)
+		{
+			board[p.row][p.col] = &p;
+		}
+
 		blackPieces = p.blackPieces;
-		board = p.board;
+		for(auto &p: blackPieces)
+		{
+			board[p.row][p.col] = &p;
+		}
 	}
 
 	void executeMove(Move &m)
 	{
-		Piece* from = board[m.fromRow][m.fromCol];
 		Piece* to = board[m.toRow][m.toCol];
 		if(to != NULL)
 		{
 			// Delete eatable chess piece.
-			if(to->owner == BLACK)
+			list<Piece>* list = (to->owner == BLACK) ? &blackPieces : &whitePieces;
+			auto i = (*list).end();
+			while(true)
 			{
-				blackPieces.remove(to);
+				i--;
+				if(i->row == m.toRow && i->col == m.toCol)
+				{
+					(*list).erase(i);
+					break;
+				}
+				if(i == (*list).begin()) break;
 			}
-			else
-			{
-				whitePieces.remove(to);
-			}
-			delete to;
 		}
+		Piece* from = board[m.fromRow][m.fromCol];
 		if(from != NULL)
 		{
 			// Change the location of movable chess piece.
@@ -193,15 +191,15 @@ public:
 		cout << "\n White" << endl;
 		for(auto &p: whitePieces)
 		{
-			p->debugPrint();
-			cout << (char)(p->col + 65) << (p->row + 1) << " ";
+			p.debugPrint();
+			cout << (char)(p.col + 65) << (p.row + 1) << " ";
 		}
 		
 		cout << "\n\n Black" << endl;
 		for(auto &p: blackPieces)
 		{
-			p->debugPrint();
-			cout << (char)(p->col + 65) << (p->row + 1) << " ";
+			p.debugPrint();
+			cout << (char)(p.col + 65) << (p.row + 1) << " ";
 		}
 		cout << endl;
 	}
