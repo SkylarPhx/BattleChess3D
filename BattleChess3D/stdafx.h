@@ -18,6 +18,7 @@
 #include <chrono>
 #include <iostream>
 #include <list>
+#include <string>
 #include <thread>
 
 #include <windows.h>

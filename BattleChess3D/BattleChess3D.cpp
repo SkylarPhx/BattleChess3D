@@ -10,11 +10,20 @@ int _tmain(int argc, _TCHAR* argv[])
 	Position position;
 	position.start();
 	position.showPosition();
-	
-	// Prevents program from exiting.
+	Move move;
+
+	string command = "";
 	while(1)
 	{
-		this_thread::sleep_for(chrono::milliseconds(1000));
+		cout << "\nGive a move command like E2-E4\nRanges: [A:H][1:8]" << endl;
+		getline(cin, command, '\n');
+		if(command.size() == 5)
+		{
+			move.setMove(command);
+			position.executeMove(move);
+		}
+
+		this_thread::sleep_for(chrono::milliseconds(500));
 		position.showPosition();
 	}
 

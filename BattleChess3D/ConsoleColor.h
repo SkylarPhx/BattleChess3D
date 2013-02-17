@@ -8,13 +8,13 @@ inline std::ostream& greyBlack(std::ostream &s)
 
 inline std::ostream& whiteGold(std::ostream &s)
 {
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 111);
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 105);
     return s;
 }
 
 inline std::ostream& whiteYellow(std::ostream &s)
 {
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 231);
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 233);
     return s;
 }
 
