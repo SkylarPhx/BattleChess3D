@@ -15,10 +15,14 @@ int _tmain(int argc, _TCHAR* argv[])
 	string command = "";
 	while(1)
 	{
+		//int64_t duration = 0 - chrono::system_clock::to_time_t(chrono::system_clock::now());
+
 		// Deletes old position and copies its data to new position.
 		Position oldPosition(*position);
 		delete position;
 		position = new Position(oldPosition);
+		list<Move> moves;
+		cout << "Legal moves: " << position->generateLegalMoves(moves) << endl;
 		cout << "\nGive a move command like E2-E4\nRanges: [A:H][1:8]" << endl;
 		getline(cin, command, '\n');
 		if(command.size() == 5)
@@ -33,6 +37,12 @@ int _tmain(int argc, _TCHAR* argv[])
 
 		//this_thread::sleep_for(chrono::milliseconds(500));
 		position->showPosition();
+		
+		// Turn changes.
+		position->changeTurn();
+
+		//duration += chrono::system_clock::to_time_t(chrono::system_clock::now());
+		//cout << duration << " seconds this turn." << endl;
 	}
 
 	return 0;

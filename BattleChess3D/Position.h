@@ -7,8 +7,16 @@ class Move
 {
 public:
 	short fromRow, fromCol, toRow, toCol;
+	bool isCastling;
 
 	Move(){}
+	Move(short fC, short fR, short tC, short tR)
+	{
+		fromCol = fC;
+		fromRow = fR;
+		toCol = tC;
+		toRow = tR;
+	}
 	~Move(){}
 
 	void setMove(string &command)
@@ -27,6 +35,8 @@ private:
 	// Chess board which contais pointers to pieces.
 	// If a square doesn't have a piece on it, it'll point to NULL.
 	array<array<Piece*, 8>, 8> board;
+	// Keeps track of turns.
+	Owner whoseTurn;
 
 public:
 	Position(){}
@@ -97,6 +107,8 @@ public:
 		{
 			board[p.row][p.col] = &p;
 		}
+
+		whoseTurn = WHITE;
 	}
 
 	void copyPosition(Position &p)
@@ -114,6 +126,142 @@ public:
 		{
 			board[p.row][p.col] = &p;
 		}
+
+		whoseTurn = p.whoseTurn;
+	}
+	
+	void printColRow(short col, short row)
+	{
+		cout << " " << (char)(col + 65) << (row + 1);
+	}
+
+	// For checking any square.
+	// Returns true if a piece is found.
+	bool moveCheck(Piece* &p, list<Move> &m, Owner o, short fC, short fR, short tC, short tR)
+	{
+		if(p == NULL)
+		{
+			// Legal move!
+			printColRow(tC, tR);
+			m.emplace_back(fC, fR, tC, tR);
+			// Continue checking for moves.
+			return false;
+		}
+		else if(p->owner != o)
+		{
+			// Enemy sighted!
+			// Legal move!
+			printColRow(tC, tR);
+			m.emplace_back(fC, fR, tC, tR);
+			// No more moves!
+		}
+		return true;
+	}
+
+	short generateLegalMoves(list<Move> &moves)
+	{
+		// ï K‰yd‰‰n l‰pi vuorossa olevan pelaajan nappulat.
+		// ï Ensimm‰isen‰ on aina kuningas.
+		// ï Tarkistetaan uhkaako vihollisen nappulat kuningasta.
+		// ï Jos yli 2 nappulaa uhkaa, siirryt‰‰n selaamaan kuninkaan siirtoja.
+		// ï Jos 1 nappula uhkaa, katsotaan voiko oman nappulan laittaa v‰liin.
+		// ï Jos kuningasta voi siirt‰‰, jatketaan muihin omiin nappuloihin.
+		// ï Niiss‰ ei en‰‰ pohdita kuninkaan uhkaamisia.
+
+		list<Piece> *playersPieces, *enemysPieces;
+		if(whoseTurn == WHITE)
+		{
+			playersPieces = &whitePieces;
+			enemysPieces = &blackPieces;
+		}
+		else
+		{
+			playersPieces = &blackPieces;
+			enemysPieces = &whitePieces;
+		}
+
+		// Kuninkaan k‰sittely t‰h‰n
+
+		// Sitten loput napit
+		for(auto p = (*playersPieces).begin()++; p != (*playersPieces).end(); p++)
+		{
+			switch(p->who)
+			{
+			case QUEEN:
+				{
+					// Some debug info.
+					cout << "Moves of Queen in";
+					printColRow(p->col, p->row);
+					cout << endl;
+
+					// First up
+					for(short r = p->row + 1; r < 8; r++)
+					{
+						if(moveCheck(board[r][p->col], moves, whoseTurn, p->col, p->row, p->col, r)) break;
+					}
+					cout << endl;
+
+					// Then up-right
+					for(short r = p->row + 1, c = p->col + 1; r < 8 && c < 8; r++, c++)
+					{
+						if(moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r)) break;
+					}
+					cout << endl;
+
+					// Then right
+
+					// Then right-down
+
+					// Then down
+
+					// Then down-left
+
+					// Then left
+
+					// Then left-up
+
+				}
+				break;
+			case ROOK:
+				{
+					// Some debug info.
+					cout << "Moves of Rook in";
+					printColRow(p->col, p->row);
+					cout << endl;
+
+				}
+				break;
+			case BISHOP:
+				{
+					// Some debug info.
+					cout << "Moves of Bishop in";
+					printColRow(p->col, p->row);
+					cout << endl;
+
+				}
+				break;
+			case KNIGHT:
+				{
+					// Some debug info.
+					cout << "Moves of Knight in";
+					printColRow(p->col, p->row);
+					cout << endl;
+
+				}
+				break;
+			case PAWN:
+				{
+					// Some debug info.
+					cout << "Moves of Pawn in";
+					printColRow(p->col, p->row);
+					cout << endl;
+
+				}
+				break;
+			}
+		}
+
+		return moves.size();
 	}
 
 	void executeMove(Move &m)
@@ -145,6 +293,12 @@ public:
 		// Change pointers to chess pieces on the chess board.
 		board[m.toRow][m.toCol] = board[m.fromRow][m.fromCol];
 		board[m.fromRow][m.fromCol] = NULL;
+	}
+
+	void changeTurn()
+	{
+		// Turn changes.
+		whoseTurn = (whoseTurn == WHITE) ? BLACK : WHITE;
 	}
 
 	void showPosition() // Debug print.
