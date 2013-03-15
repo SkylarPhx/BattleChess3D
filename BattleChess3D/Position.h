@@ -21,9 +21,9 @@ public:
 
 	void setMove(string &command)
 	{
-		fromCol = command[0] - 65;
+		fromCol = command[0] - 97;
 		fromRow = command[1] - 49;
-		toCol = command[3] - 65;
+		toCol = command[3] - 97;
 		toRow = command[4] - 49;
 	}
 };
@@ -64,44 +64,44 @@ public:
 	{
 		clear();
 		// Assigning chess pieces to players.
-		whitePieces.emplace_back(WHITE, KING, R1, E);
-		whitePieces.emplace_back(WHITE, QUEEN, R1, D);
-		whitePieces.emplace_back(WHITE, ROOK, R1, A);
-		whitePieces.emplace_back(WHITE, ROOK, R1, H);
-		whitePieces.emplace_back(WHITE, BISHOP, R1, C);
-		whitePieces.emplace_back(WHITE, BISHOP, R1, F);
-		whitePieces.emplace_back(WHITE, KNIGHT, R1, B);
-		whitePieces.emplace_back(WHITE, KNIGHT, R1, G);
-		whitePieces.emplace_back(WHITE, PAWN, R2, A);
-		whitePieces.emplace_back(WHITE, PAWN, R2, B);
-		whitePieces.emplace_back(WHITE, PAWN, R2, C);
-		whitePieces.emplace_back(WHITE, PAWN, R2, D);
-		whitePieces.emplace_back(WHITE, PAWN, R2, E);
-		whitePieces.emplace_back(WHITE, PAWN, R2, F);
-		whitePieces.emplace_back(WHITE, PAWN, R2, G);
-		whitePieces.emplace_back(WHITE, PAWN, R2, H);
+		whitePieces.emplace_back(WHITE, KING, R1, e);
+		whitePieces.emplace_back(WHITE, QUEEN, R1, d);
+		whitePieces.emplace_back(WHITE, ROOK, R1, a);
+		whitePieces.emplace_back(WHITE, ROOK, R1, h);
+		whitePieces.emplace_back(WHITE, BISHOP, R1, c);
+		whitePieces.emplace_back(WHITE, BISHOP, R1, f);
+		whitePieces.emplace_back(WHITE, KNIGHT, R1, b);
+		whitePieces.emplace_back(WHITE, KNIGHT, R1, g);
+		whitePieces.emplace_back(WHITE, PAWN, R2, a);
+		whitePieces.emplace_back(WHITE, PAWN, R2, b);
+		whitePieces.emplace_back(WHITE, PAWN, R2, c);
+		whitePieces.emplace_back(WHITE, PAWN, R2, d);
+		whitePieces.emplace_back(WHITE, PAWN, R2, e);
+		whitePieces.emplace_back(WHITE, PAWN, R2, f);
+		whitePieces.emplace_back(WHITE, PAWN, R2, g);
+		whitePieces.emplace_back(WHITE, PAWN, R2, h);
 
 		for(auto &p: whitePieces)
 		{
 			board[p.row][p.col] = &p;
 		}
 
-		blackPieces.emplace_back(BLACK, KING, R8, E);
-		blackPieces.emplace_back(BLACK, QUEEN, R8, D);
-		blackPieces.emplace_back(BLACK, ROOK, R8, A);
-		blackPieces.emplace_back(BLACK, ROOK, R8, H);
-		blackPieces.emplace_back(BLACK, BISHOP, R8, C);
-		blackPieces.emplace_back(BLACK, BISHOP, R8, F);
-		blackPieces.emplace_back(BLACK, KNIGHT, R8, B);
-		blackPieces.emplace_back(BLACK, KNIGHT, R8, G);
-		blackPieces.emplace_back(BLACK, PAWN, R7, A);
-		blackPieces.emplace_back(BLACK, PAWN, R7, B);
-		blackPieces.emplace_back(BLACK, PAWN, R7, C);
-		blackPieces.emplace_back(BLACK, PAWN, R7, D);
-		blackPieces.emplace_back(BLACK, PAWN, R7, E);
-		blackPieces.emplace_back(BLACK, PAWN, R7, F);
-		blackPieces.emplace_back(BLACK, PAWN, R7, G);
-		blackPieces.emplace_back(BLACK, PAWN, R7, H);
+		blackPieces.emplace_back(BLACK, KING, R8, e);
+		blackPieces.emplace_back(BLACK, QUEEN, R8, d);
+		blackPieces.emplace_back(BLACK, ROOK, R8, a);
+		blackPieces.emplace_back(BLACK, ROOK, R8, h);
+		blackPieces.emplace_back(BLACK, BISHOP, R8, c);
+		blackPieces.emplace_back(BLACK, BISHOP, R8, f);
+		blackPieces.emplace_back(BLACK, KNIGHT, R8, b);
+		blackPieces.emplace_back(BLACK, KNIGHT, R8, g);
+		blackPieces.emplace_back(BLACK, PAWN, R7, a);
+		blackPieces.emplace_back(BLACK, PAWN, R7, b);
+		blackPieces.emplace_back(BLACK, PAWN, R7, c);
+		blackPieces.emplace_back(BLACK, PAWN, R7, d);
+		blackPieces.emplace_back(BLACK, PAWN, R7, e);
+		blackPieces.emplace_back(BLACK, PAWN, R7, f);
+		blackPieces.emplace_back(BLACK, PAWN, R7, g);
+		blackPieces.emplace_back(BLACK, PAWN, R7, h);
 
 		for(auto &p: blackPieces)
 		{
@@ -132,7 +132,7 @@ public:
 	
 	void printColRow(short col, short row)
 	{
-		cout << " " << (char)(col + 65) << (row + 1);
+		cout << " " << (char)(col + 97) << (row + 1);
 	}
 
 	// For checking any square.
@@ -160,13 +160,13 @@ public:
 
 	short generateLegalMoves(list<Move> &moves)
 	{
-		// ï K‰yd‰‰n l‰pi vuorossa olevan pelaajan nappulat.
-		// ï Ensimm‰isen‰ on aina kuningas.
-		// ï Tarkistetaan uhkaako vihollisen nappulat kuningasta.
-		// ï Jos yli 2 nappulaa uhkaa, siirryt‰‰n selaamaan kuninkaan siirtoja.
-		// ï Jos 1 nappula uhkaa, katsotaan voiko oman nappulan laittaa v‰liin.
-		// ï Jos kuningasta voi siirt‰‰, jatketaan muihin omiin nappuloihin.
-		// ï Niiss‰ ei en‰‰ pohdita kuninkaan uhkaamisia.
+		// ‚Ä¢ K√§yd√§√§n l√§pi vuorossa olevan pelaajan nappulat.
+		// ‚Ä¢ Ensimm√§isen√§ on aina kuningas.
+		// ‚Ä¢ Tarkistetaan uhkaako vihollisen nappulat kuningasta.
+		// ‚Ä¢ Jos yli 2 nappulaa uhkaa, siirryt√§√§n selaamaan kuninkaan siirtoja.
+		// ‚Ä¢ Jos 1 nappula uhkaa, katsotaan voiko oman nappulan laittaa v√§liin.
+		// ‚Ä¢ Jos kuningasta voi siirt√§√§, jatketaan muihin omiin nappuloihin.
+		// ‚Ä¢ Niiss√§ ei en√§√§ pohdita kuninkaan uhkaamisia.
 
 		list<Piece> *playersPieces, *enemysPieces;
 		if(whoseTurn == WHITE)
@@ -180,7 +180,7 @@ public:
 			enemysPieces = &whitePieces;
 		}
 
-		// Kuninkaan k‰sittely t‰h‰n
+		// Kuninkaan k√§sittely t√§h√§n
 
 		// Sitten loput napit
 		for(auto p = (*playersPieces).begin()++; p != (*playersPieces).end(); p++)
@@ -209,19 +209,46 @@ public:
 					cout << endl;
 
 					// Then right
+					for (short c = p->col + 1; c <= 7; c++) {
+						if (moveCheck(board[p->row][c], moves, whoseTurn, p->col, p->row, c, p->row)) break;
+					}
+					cout << endl;
 
 					// Then right-down
+					for (short r = p->row - 1, c = p -> col + 1; r >= 0 && c <8; r--, c++) {
+						if (moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r)) break;
+					}
+					cout << endl;
 
 					// Then down
+					for(short r = p->row - 1; r >= 0; r--)
+					{
+						if(moveCheck(board[r][p->col], moves, whoseTurn, p->col, p->row, p->col, r)) break;
+					}
+					cout << endl;
 
 					// Then down-left
+					for (short r = p->row - 1, c = p -> col - 1; r >= 0 && c >= 0; r--, c--) {
+						if (moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r)) break;
+					}
+					cout << endl;
 
 					// Then left
+					for (short c = p->col - 1; c >= 0; c--) {
+						if (moveCheck(board[p->row][c], moves, whoseTurn, p->col, p->row, c, p->row)) break;
+					}
+					cout << endl;
 
 					// Then left-up
+					for(short r = p->row + 1, c = p->col - 1; r < 8 && c >= 0; r++, c--)
+					{
+						if(moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r)) break;
+					}
+					cout << endl;
 
 				}
 				break;
+
 			case ROOK:
 				{
 					// Some debug info.
@@ -229,8 +256,35 @@ public:
 					printColRow(p->col, p->row);
 					cout << endl;
 
+					// First up
+					for(short r = p->row + 1; r < 8; r++)
+					{
+						if(moveCheck(board[r][p->col], moves, whoseTurn, p->col, p->row, p->col, r)) break;
+					}
+					cout << endl;
+
+					// Then right
+					for (short c = p->col + 1; c <= 7; c++) {
+						if (moveCheck(board[p->row][c], moves, whoseTurn, p->col, p->row, c, p->row)) break;
+					}
+					cout << endl;
+
+					// Then down
+					for(short r = p->row - 1; r >= 0; r--)
+					{
+						if(moveCheck(board[r][p->col], moves, whoseTurn, p->col, p->row, p->col, r)) break;
+					}
+					cout << endl;
+
+					// Then left
+					for (short c = p->col - 1; c >= 0; c--) {
+						if (moveCheck(board[p->row][c], moves, whoseTurn, p->col, p->row, c, p->row)) break;
+					}
+					cout << endl;
+
 				}
 				break;
+
 			case BISHOP:
 				{
 					// Some debug info.
@@ -238,8 +292,35 @@ public:
 					printColRow(p->col, p->row);
 					cout << endl;
 
+					// Then up-right
+					for(short r = p->row + 1, c = p->col + 1; r < 8 && c < 8; r++, c++)
+					{
+						if(moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r)) break;
+					}
+					cout << endl;
+
+					// Then right-down
+					for (short r = p->row - 1, c = p -> col + 1; r >= 0 && c <8; r--, c++) {
+						if (moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r)) break;
+					}
+					cout << endl;
+
+					// Then left-up
+					for(short r = p->row + 1, c = p->col - 1; r < 8 && c >= 0; r++, c--)
+					{
+						if(moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r)) break;
+					}
+					cout << endl;
+
+					// Then down-left
+					for (short r = p->row - 1, c = p -> col - 1; r >= 0 && c >= 0; r--, c--) {
+						if (moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r)) break;
+					}
+					cout << endl;
+
 				}
 				break;
+
 			case KNIGHT:
 				{
 					// Some debug info.
@@ -247,16 +328,20 @@ public:
 					printColRow(p->col, p->row);
 					cout << endl;
 
-				}
-				break;
-			case PAWN:
-				{
-					// Some debug info.
-					cout << "Moves of Pawn in";
-					printColRow(p->col, p->row);
-					cout << endl;
+					// up then left
+					for (short r = p->row + 2, c = p->col - 1; r < 8 && c >= 0;
 
 				}
+				break;
+
+			//case PAWN:
+			//	{
+			//		// Some debug info.
+			//		cout << "Moves of Pawn in";
+			//		printColRow(p->col, p->row);
+			//		cout << endl;
+
+			//	}
 				break;
 			}
 		}
@@ -304,7 +389,7 @@ public:
 	void showPosition() // Debug print.
 	{
 		bool turn = true;
-		cout << "\n    A  B  C  D  E  F  G  H" << endl;
+		cout << "\n    a  b  c  d  e  f  g  h" << endl;
 		for(short i=8; i--> 0;)
 		{
 			cout << " " << (i + 1) << " ";
@@ -335,25 +420,27 @@ public:
 						cout << whiteGold;
 				}
 				turn = !turn;
+				cout << " ";
 				p->debugPrint();
+				cout << " ";
 			}
 			turn = !turn;
 			cout << greyBlack << " " << (i + 1) << endl;
 		}
-		cout << "    A  B  C  D  E  F  G  H" << endl;
+		cout << "    a  b  c  d  e  f  g  h" << endl;
 
 		cout << "\n White" << endl;
 		for(auto &p: whitePieces)
 		{
 			p.debugPrint();
-			cout << (char)(p.col + 65) << (p.row + 1) << " ";
+			cout << (char)(p.col + 97) << (p.row + 1) << " ";
 		}
 		
 		cout << "\n\n Black" << endl;
 		for(auto &p: blackPieces)
 		{
 			p.debugPrint();
-			cout << (char)(p.col + 65) << (p.row + 1) << " ";
+			cout << (char)(p.col + 97) << (p.row + 1) << " ";
 		}
 		cout << endl;
 	}
