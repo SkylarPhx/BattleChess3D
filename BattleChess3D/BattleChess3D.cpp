@@ -27,9 +27,9 @@ int _tmain(int argc, _TCHAR* argv[])
 		getline(cin, command, '\n');
 		if(command.size() == 5)
 		{
-			if(command[0] < 65 || command[0] > 72) continue;
+			if(command[0] < 97 || command[0] > 104) continue;
 			if(command[1] < 49 || command[1] > 56) continue;
-			if(command[3] < 65 || command[3] > 72) continue;
+			if(command[3] < 97 || command[3] > 104) continue;
 			if(command[4] < 49 || command[4] > 56) continue;
 			move.setMove(command);
 			position->executeMove(move);

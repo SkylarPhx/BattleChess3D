@@ -64,44 +64,44 @@ public:
 	{
 		clear();
 		// Assigning chess pieces to players.
-		whitePieces.emplace_back(WHITE, KING, R1, e);
-		whitePieces.emplace_back(WHITE, QUEEN, R1, d);
-		whitePieces.emplace_back(WHITE, ROOK, R1, a);
-		whitePieces.emplace_back(WHITE, ROOK, R1, h);
-		whitePieces.emplace_back(WHITE, BISHOP, R1, c);
-		whitePieces.emplace_back(WHITE, BISHOP, R1, f);
-		whitePieces.emplace_back(WHITE, KNIGHT, R1, b);
-		whitePieces.emplace_back(WHITE, KNIGHT, R1, g);
-		whitePieces.emplace_back(WHITE, PAWN, R2, a);
-		whitePieces.emplace_back(WHITE, PAWN, R2, b);
-		whitePieces.emplace_back(WHITE, PAWN, R2, c);
-		whitePieces.emplace_back(WHITE, PAWN, R2, d);
-		whitePieces.emplace_back(WHITE, PAWN, R2, e);
-		whitePieces.emplace_back(WHITE, PAWN, R2, f);
-		whitePieces.emplace_back(WHITE, PAWN, R2, g);
-		whitePieces.emplace_back(WHITE, PAWN, R2, h);
+		whitePieces.emplace_back(WHITE, KING, R1, E);
+		whitePieces.emplace_back(WHITE, QUEEN, R1, D);
+		whitePieces.emplace_back(WHITE, ROOK, R1, A);
+		whitePieces.emplace_back(WHITE, ROOK, R1, H);
+		whitePieces.emplace_back(WHITE, BISHOP, R1, C);
+		whitePieces.emplace_back(WHITE, BISHOP, R1, F);
+		whitePieces.emplace_back(WHITE, KNIGHT, R1, B);
+		whitePieces.emplace_back(WHITE, KNIGHT, R1, G);
+		whitePieces.emplace_back(WHITE, PAWN, R2, A);
+		whitePieces.emplace_back(WHITE, PAWN, R2, B);
+		whitePieces.emplace_back(WHITE, PAWN, R2, C);
+		whitePieces.emplace_back(WHITE, PAWN, R2, D);
+		whitePieces.emplace_back(WHITE, PAWN, R2, E);
+		whitePieces.emplace_back(WHITE, PAWN, R2, F);
+		whitePieces.emplace_back(WHITE, PAWN, R2, G);
+		whitePieces.emplace_back(WHITE, PAWN, R2, H);
 
 		for(auto &p: whitePieces)
 		{
 			board[p.row][p.col] = &p;
 		}
 
-		blackPieces.emplace_back(BLACK, KING, R8, e);
-		blackPieces.emplace_back(BLACK, QUEEN, R8, d);
-		blackPieces.emplace_back(BLACK, ROOK, R8, a);
-		blackPieces.emplace_back(BLACK, ROOK, R8, h);
-		blackPieces.emplace_back(BLACK, BISHOP, R8, c);
-		blackPieces.emplace_back(BLACK, BISHOP, R8, f);
-		blackPieces.emplace_back(BLACK, KNIGHT, R8, b);
-		blackPieces.emplace_back(BLACK, KNIGHT, R8, g);
-		blackPieces.emplace_back(BLACK, PAWN, R7, a);
-		blackPieces.emplace_back(BLACK, PAWN, R7, b);
-		blackPieces.emplace_back(BLACK, PAWN, R7, c);
-		blackPieces.emplace_back(BLACK, PAWN, R7, d);
-		blackPieces.emplace_back(BLACK, PAWN, R7, e);
-		blackPieces.emplace_back(BLACK, PAWN, R7, f);
-		blackPieces.emplace_back(BLACK, PAWN, R7, g);
-		blackPieces.emplace_back(BLACK, PAWN, R7, h);
+		blackPieces.emplace_back(BLACK, KING, R8, E);
+		blackPieces.emplace_back(BLACK, QUEEN, R8, D);
+		blackPieces.emplace_back(BLACK, ROOK, R8, A);
+		blackPieces.emplace_back(BLACK, ROOK, R8, H);
+		blackPieces.emplace_back(BLACK, BISHOP, R8, C);
+		blackPieces.emplace_back(BLACK, BISHOP, R8, F);
+		blackPieces.emplace_back(BLACK, KNIGHT, R8, B);
+		blackPieces.emplace_back(BLACK, KNIGHT, R8, G);
+		blackPieces.emplace_back(BLACK, PAWN, R7, A);
+		blackPieces.emplace_back(BLACK, PAWN, R7, B);
+		blackPieces.emplace_back(BLACK, PAWN, R7, C);
+		blackPieces.emplace_back(BLACK, PAWN, R7, D);
+		blackPieces.emplace_back(BLACK, PAWN, R7, E);
+		blackPieces.emplace_back(BLACK, PAWN, R7, F);
+		blackPieces.emplace_back(BLACK, PAWN, R7, G);
+		blackPieces.emplace_back(BLACK, PAWN, R7, H);
 
 		for(auto &p: blackPieces)
 		{
@@ -158,6 +158,34 @@ public:
 		return true;
 	}
 
+	bool threathenCheck(Piece* &p, Owner o, bool &threat, Who secondPieceType)
+	{
+		// No piece, no threat.
+		// Continue checking.
+		if(p == NULL) return false;
+		// Our piece, no threat.
+		// Stop checking.
+		if(p->owner == o) return true;
+		// Is it queen or rook/bishop = is the king threathened?
+		if(p->who == QUEEN || p->who == secondPieceType) threat = true;
+		// Stop checking.
+		return true;
+	}
+	
+	bool threathenCheck1Piece(Piece* &p, Owner o, bool &threat, Who pieceType)
+	{
+		// No piece, no threat.
+		// Continue checking.
+		if(p == NULL) return false;
+		// Our piece, no threat.
+		// Stop checking.
+		if(p->owner == o) return true;
+		// Is it queen or rook/bishop = is the king threathened?
+		if(p->who == PAWN) threat = true;
+		// Stop checking.
+		return true;
+	}
+
 	short generateLegalMoves(list<Move> &moves)
 	{
 		// • Käydään läpi vuorossa olevan pelaajan nappulat.
@@ -181,6 +209,197 @@ public:
 		}
 
 		// Kuninkaan käsittely tähän
+		auto king = (*playersPieces).begin();
+
+		// Uhataanko?
+		bool isThreathened = false;
+
+		// Up/Down/Left/Right: queens, rooks
+		// Up
+		for(short r = king->row + 1; r < 8; r++)
+		{
+			if(threathenCheck(board[r][king->col], king->owner, isThreathened, ROOK))
+			{
+				if(isThreathened) goto CheckKingsMoves;
+				// No need for break, because of goto.
+			}
+		}
+		// Right
+		for(short c = king->col + 1; c < 8; c++)
+		{
+			if(threathenCheck(board[king->row][c], king->owner, isThreathened, ROOK))
+			{
+				if(isThreathened) goto CheckKingsMoves;
+				// No need for break, because of goto.
+			}
+		}
+		// Down
+		for(short r = king->row - 1; r >= 0; r--)
+		{
+			if(threathenCheck(board[r][king->col], king->owner, isThreathened, ROOK))
+			{
+				if(isThreathened) goto CheckKingsMoves;
+				// No need for break, because of goto.
+			}
+		}
+		// Left
+		for(short c = king->col - 1; c >= 0; c--)
+		{
+			if(threathenCheck(board[king->row][c], king->owner, isThreathened, ROOK))
+			{
+				if(isThreathened) goto CheckKingsMoves;
+				// No need for break, because of goto.
+			}
+		}
+
+		// Sideways: queens, bishops
+		// Up-right
+		for(short r = king->row + 1, c = king->col + 1; r < 8 && c < 8; r++, c++)
+		{
+			if(threathenCheck(board[r][c], king->owner, isThreathened, BISHOP))
+			{
+				if(isThreathened) goto CheckKingsMoves;
+				// No need for break, because of goto.
+			}
+		}
+		// Right-down
+		for(short r = king->row - 1, c = king->col + 1; r >= 0 && c < 8; r--, c++)
+		{
+			if(threathenCheck(board[r][c], king->owner, isThreathened, BISHOP))
+			{
+				if(isThreathened) goto CheckKingsMoves;
+				// No need for break, because of goto.
+			}
+		}
+		// Down-left
+		for(short r = king->row - 1, c = king->col - 1; r >= 0 && c >= 0; r--, c--)
+		{
+			if(threathenCheck(board[r][c], king->owner, isThreathened, BISHOP))
+			{
+				if(isThreathened) goto CheckKingsMoves;
+				// No need for break, because of goto.
+			}
+		}
+		// Left-up
+		for(short r = king->row + 1, c = king->col - 1; r < 8 && c >= 0; r++, c--)
+		{
+			if(threathenCheck(board[r][c], king->owner, isThreathened, BISHOP))
+			{
+				if(isThreathened) goto CheckKingsMoves;
+				// No need for break, because of goto.
+			}
+		}
+
+		// Checking for pawns.
+		short r = king->row;
+		if(whoseTurn == WHITE)
+		{
+			// No threat from pawns.
+			if(r == 7) goto CheckKingsMoves;
+			r++;
+		}
+		else
+		{
+			// No threat from pawns.
+			if(r == 0) goto CheckKingsMoves;
+			r--;
+		}
+		short c = king->col;
+		// Right side
+		if(c < 7)
+		if(threathenCheck1Piece(board[r][c], king->owner, isThreathened, PAWN))
+		{
+			if(isThreathened) goto CheckKingsMoves;
+			// No need for break, because of goto.
+		}
+		// Left side
+		if(c > 0)
+		if(threathenCheck1Piece(board[r][c], king->owner, isThreathened, PAWN))
+		{
+			if(isThreathened) goto CheckKingsMoves;
+			// No need for break, because of goto.
+		}
+
+		// Checking for knights
+		r = king->row;
+		c = king->col;
+		// Up
+		if(r < 6)
+		{
+			// Right
+			if(c < 7)
+			if(threathenCheck1Piece(board[r + 2][c + 1], king->owner, isThreathened, KNIGHT))
+			{
+				if(isThreathened) goto CheckKingsMoves;
+				// No need for break, because of goto.
+			}
+			// Left
+			if(c > 0)
+			if(threathenCheck1Piece(board[r + 2][c - 1], king->owner, isThreathened, KNIGHT))
+			{
+				if(isThreathened) goto CheckKingsMoves;
+				// No need for break, because of goto.
+			}
+		}
+		// Right
+		if(c < 6)
+		{
+			// Up
+			if(r < 7)
+			if(threathenCheck1Piece(board[r + 1][c + 2], king->owner, isThreathened, KNIGHT))
+			{
+				if(isThreathened) goto CheckKingsMoves;
+				// No need for break, because of goto.
+			}
+			// Down
+			if(r > 0)
+			if(threathenCheck1Piece(board[r - 1][c + 2], king->owner, isThreathened, KNIGHT))
+			{
+				if(isThreathened) goto CheckKingsMoves;
+				// No need for break, because of goto.
+			}
+		}
+		// Down
+		if(r > 1)
+		{
+			// Right
+			if(c < 7)
+			if(threathenCheck1Piece(board[r - 2][c + 1], king->owner, isThreathened, KNIGHT))
+			{
+				if(isThreathened) goto CheckKingsMoves;
+				// No need for break, because of goto.
+			}
+			// Left
+			if(c > 0)
+			if(threathenCheck1Piece(board[r - 2][c - 1], king->owner, isThreathened, KNIGHT))
+			{
+				if(isThreathened) goto CheckKingsMoves;
+				// No need for break, because of goto.
+			}
+		}
+		// Left
+		if(c > 1)
+		{
+			// Up
+			if(r < 7)
+			if(threathenCheck1Piece(board[r + 1][c - 2], king->owner, isThreathened, KNIGHT))
+			{
+				if(isThreathened) goto CheckKingsMoves;
+				// No need for break, because of goto.
+			}
+			// Down
+			if(r > 0)
+			if(threathenCheck1Piece(board[r - 1][c - 2], king->owner, isThreathened, KNIGHT))
+			{
+				if(isThreathened) goto CheckKingsMoves;
+				// No need for break, because of goto.
+			}
+		}
+	
+		// Jos ei niin voiko liikkua?
+CheckKingsMoves:
+		if(isThreathened) cout << "Check!" << endl;
+		
 
 		// Sitten loput napit
 		for(auto p = (*playersPieces).begin()++; p != (*playersPieces).end(); p++)
@@ -245,10 +464,8 @@ public:
 						if(moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r)) break;
 					}
 					cout << endl;
-
 				}
 				break;
-
 			case ROOK:
 				{
 					// Some debug info.
@@ -281,10 +498,8 @@ public:
 						if (moveCheck(board[p->row][c], moves, whoseTurn, p->col, p->row, c, p->row)) break;
 					}
 					cout << endl;
-
 				}
 				break;
-
 			case BISHOP:
 				{
 					// Some debug info.
@@ -317,10 +532,8 @@ public:
 						if (moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r)) break;
 					}
 					cout << endl;
-
 				}
 				break;
-
 			case KNIGHT:
 				{
 					// Some debug info.
@@ -329,19 +542,17 @@ public:
 					cout << endl;
 
 					// up then left
-					for (short r = p->row + 2, c = p->col - 1; r < 8 && c >= 0;
+					//for (short r = p->row + 2, c = p->col - 1; r < 8 && c >= 0;
 
 				}
 				break;
-
-			//case PAWN:
-			//	{
+			case PAWN:
+				{
 			//		// Some debug info.
 			//		cout << "Moves of Pawn in";
 			//		printColRow(p->col, p->row);
 			//		cout << endl;
-
-			//	}
+				}
 				break;
 			}
 		}
