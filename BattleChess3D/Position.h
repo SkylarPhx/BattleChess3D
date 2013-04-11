@@ -137,7 +137,7 @@ public:
 
 	// For checking any square.
 	// Returns true if a piece is found.
-	bool moveCheck(Piece* &p, list<Move> &m, Owner o, short fC, short fR, short tC, short tR)
+	bool moveCheck(Piece* p, list<Move> &m, Owner o, short fC, short fR, short tC, short tR)
 	{
 		if(p == NULL)
 		{
@@ -158,7 +158,7 @@ public:
 		return true;
 	}
 
-	bool threathenCheck(Piece* &p, Owner o, bool &threat, Who secondPieceType)
+	bool threatenCheck(Piece* p, Owner o, short &threats, Who secondPieceType)
 	{
 		// No piece, no threat.
 		// Continue checking.
@@ -166,13 +166,13 @@ public:
 		// Our piece, no threat.
 		// Stop checking.
 		if(p->owner == o) return true;
-		// Is it queen or rook/bishop = is the king threathened?
-		if(p->who == QUEEN || p->who == secondPieceType) threat = true;
+		// Is it queen or rook/bishop = is the king threatened?
+		if(p->who == QUEEN || p->who == secondPieceType) threats++;
 		// Stop checking.
 		return true;
 	}
 	
-	bool threathenCheck1Piece(Piece* &p, Owner o, bool &threat, Who pieceType)
+	bool threatenCheck1Piece(Piece* p, Owner o, short &threats, Who pieceType)
 	{
 		// No piece, no threat.
 		// Continue checking.
@@ -180,10 +180,194 @@ public:
 		// Our piece, no threat.
 		// Stop checking.
 		if(p->owner == o) return true;
-		// Is it queen or rook/bishop = is the king threathened?
-		if(p->who == PAWN) threat = true;
+		// Is it queen or rook/bishop = is the king threatened?
+		if(p->who == pieceType) threats++;
 		// Stop checking.
 		return true;
+	}
+
+	bool isKingThreatened(Piece &king, Piece* threatener)
+	{
+		// Uhkien määrä (tarvitaan myöhemmin)
+		short threats = 0;
+
+		// Up/Down/Left/Right: queens, rooks
+		// Up
+		for(short r = king.row + 1; r < 8; r++)
+		{
+			if(threatenCheck(board[r][king.col], king.owner, threats, ROOK))
+			{
+				if(threats == 1) threatener = board[r][king.col];
+				break;
+			}
+		}
+		// Right
+		for(short c = king.col + 1; c < 8; c++)
+		{
+			if(threatenCheck(board[king.row][c], king.owner, threats, ROOK))
+			{
+				if(threats == 1) threatener = board[king.row][c];
+				break;
+			}
+		}
+		// Down
+		for(short r = king.row - 1; r >= 0; r--)
+		{
+			if(threatenCheck(board[r][king.col], king.owner, threats, ROOK))
+			{
+				if(threats == 1) threatener = board[r][king.col];
+				break;
+			}
+		}
+		// Left
+		for(short c = king.col - 1; c >= 0; c--)
+		{
+			if(threatenCheck(board[king.row][c], king.owner, threats, ROOK))
+			{
+				if(threats == 1) threatener = board[king.row][c];
+				break;
+			}
+		}
+
+		// Sideways: queens, bishops
+		// Up-right
+		for(short r = king.row + 1, c = king.col + 1; r < 8 && c < 8; r++, c++)
+		{
+			if(threatenCheck(board[r][c], king.owner, threats, BISHOP))
+			{
+				if(threats == 1) threatener = board[r][c];
+				break;
+			}
+		}
+		// Right-down
+		for(short r = king.row - 1, c = king.col + 1; r >= 0 && c < 8; r--, c++)
+		{
+			if(threatenCheck(board[r][c], king.owner, threats, BISHOP))
+			{
+				if(threats == 1) threatener = board[r][c];
+				break;
+			}
+		}
+		// Down-left
+		for(short r = king.row - 1, c = king.col - 1; r >= 0 && c >= 0; r--, c--)
+		{
+			if(threatenCheck(board[r][c], king.owner, threats, BISHOP))
+			{
+				if(threats == 1) threatener = board[r][c];
+				break;
+			}
+		}
+		// Left-up
+		for(short r = king.row + 1, c = king.col - 1; r < 8 && c >= 0; r++, c--)
+		{
+			if(threatenCheck(board[r][c], king.owner, threats, BISHOP))
+			{
+				if(threats == 1) threatener = board[r][c];
+				break;
+			}
+		}
+
+		// Checking for pawns.
+		short r = king.row;
+		if(whoseTurn == WHITE)
+		{
+			// No threat from pawns.
+			if(r == 7) goto SkipPawns;
+			r++;
+		}
+		else
+		{
+			// No threat from pawns.
+			if(r == 0) goto SkipPawns;
+			r--;
+		}
+		short c = king.col;
+		// Right side
+		if(c < 7)
+		if(threatenCheck1Piece(board[r][c], king.owner, threats, PAWN))
+		{
+			if(threats == 1) threatener = board[r][c];
+		}
+		// Left side
+		if(c > 0)
+		if(threatenCheck1Piece(board[r][c], king.owner, threats, PAWN))
+		{
+			if(threats == 1) threatener = board[r][c];
+		}
+		SkipPawns:
+
+		// Checking for knights
+		r = king.row;
+		c = king.col;
+		// Up
+		if(r < 6)
+		{
+			// Right
+			if(c < 7)
+			if(threatenCheck1Piece(board[r + 2][c + 1], king.owner, threats, KNIGHT))
+			{
+				if(threats == 1) threatener = board[r + 2][c + 1];
+			}
+			// Left
+			if(c > 0)
+			if(threatenCheck1Piece(board[r + 2][c - 1], king.owner, threats, KNIGHT))
+			{
+				if(threats == 1) threatener = board[r + 2][c - 1];
+			}
+		}
+		// Right
+		if(c < 6)
+		{
+			// Up
+			if(r < 7)
+			if(threatenCheck1Piece(board[r + 1][c + 2], king.owner, threats, KNIGHT))
+			{
+				if(threats == 1) threatener = board[r + 1][c + 2];
+			}
+			// Down
+			if(r > 0)
+			if(threatenCheck1Piece(board[r - 1][c + 2], king.owner, threats, KNIGHT))
+			{
+				if(threats == 1) threatener = board[r - 1][c + 2];
+			}
+		}
+		// Down
+		if(r > 1)
+		{
+			// Right
+			if(c < 7)
+			if(threatenCheck1Piece(board[r - 2][c + 1], king.owner, threats, KNIGHT))
+			{
+				if(threats == 1) threatener = board[r - 2][c + 1];
+			}
+			// Left
+			if(c > 0)
+			if(threatenCheck1Piece(board[r - 2][c - 1], king.owner, threats, KNIGHT))
+			{
+				if(threats == 1) threatener = board[r - 2][c - 1];
+			}
+		}
+		// Left
+		if(c > 1)
+		{
+			// Up
+			if(r < 7)
+			if(threatenCheck1Piece(board[r + 1][c - 2], king.owner, threats, KNIGHT))
+			{
+				if(threats == 1) threatener = board[r + 1][c - 2];
+			}
+			// Down
+			if(r > 0)
+			if(threatenCheck1Piece(board[r - 1][c - 2], king.owner, threats, KNIGHT))
+			{
+				if(threats == 1) threatener = board[r - 1][c - 2];
+			}
+		}
+
+		// Useita uhkaajia.
+		// Siispä ei ole mahdollista laittaa eteen mitään.
+		if(threats > 1) threatener = NULL; 
+		return threats;
 	}
 
 	short generateLegalMoves(list<Move> &moves)
@@ -210,196 +394,44 @@ public:
 
 		// Kuninkaan käsittely tähän
 		auto king = (*playersPieces).begin();
+		Piece *threatener = NULL;
 
 		// Uhataanko?
-		bool isThreathened = false;
+		if(isKingThreatened(*king, threatener))
+		{
+			cout << "Check!" << endl;
 
-		// Up/Down/Left/Right: queens, rooks
-		// Up
-		for(short r = king->row + 1; r < 8; r++)
-		{
-			if(threathenCheck(board[r][king->col], king->owner, isThreathened, ROOK))
-			{
-				if(isThreathened) goto CheckKingsMoves;
-				// No need for break, because of goto.
-			}
-		}
-		// Right
-		for(short c = king->col + 1; c < 8; c++)
-		{
-			if(threathenCheck(board[king->row][c], king->owner, isThreathened, ROOK))
-			{
-				if(isThreathened) goto CheckKingsMoves;
-				// No need for break, because of goto.
-			}
-		}
-		// Down
-		for(short r = king->row - 1; r >= 0; r--)
-		{
-			if(threathenCheck(board[r][king->col], king->owner, isThreathened, ROOK))
-			{
-				if(isThreathened) goto CheckKingsMoves;
-				// No need for break, because of goto.
-			}
-		}
-		// Left
-		for(short c = king->col - 1; c >= 0; c--)
-		{
-			if(threathenCheck(board[king->row][c], king->owner, isThreathened, ROOK))
-			{
-				if(isThreathened) goto CheckKingsMoves;
-				// No need for break, because of goto.
-			}
-		}
+			// Voiko kuningas liikkua?
+			// OMA FUNKTIO TÄLLE!
 
-		// Sideways: queens, bishops
-		// Up-right
-		for(short r = king->row + 1, c = king->col + 1; r < 8 && c < 8; r++, c++)
-		{
-			if(threathenCheck(board[r][c], king->owner, isThreathened, BISHOP))
+			// Jos vain yksi vihollinen uhkaa, tarkista voiko laittaa eteen nappeja.
+			// Tämä on totta vain jos kuningasta uhataan.
+			if(threatener != NULL)
 			{
-				if(isThreathened) goto CheckKingsMoves;
-				// No need for break, because of goto.
+				// Tarkista pelkästään voiko tähän väliin laittaa nappeja.
+				// TEE OMA FUNKTIO JOSSA TARKISTETAAN VOIKO OMAN LAITTAA RUUTUUN!
+				// Vihollistyypin perusteella katsotaan mitä ruutuja tarkistetaan!
+				switch(threatener->who)
+				{
+				case QUEEN:
+					break;
+				case ROOK:
+					break;
+				case BISHOP:
+					break;
+				case KNIGHT:
+					break;
+				case PAWN:
+					break;
+				}
 			}
-		}
-		// Right-down
-		for(short r = king->row - 1, c = king->col + 1; r >= 0 && c < 8; r--, c++)
-		{
-			if(threathenCheck(board[r][c], king->owner, isThreathened, BISHOP))
-			{
-				if(isThreathened) goto CheckKingsMoves;
-				// No need for break, because of goto.
-			}
-		}
-		// Down-left
-		for(short r = king->row - 1, c = king->col - 1; r >= 0 && c >= 0; r--, c--)
-		{
-			if(threathenCheck(board[r][c], king->owner, isThreathened, BISHOP))
-			{
-				if(isThreathened) goto CheckKingsMoves;
-				// No need for break, because of goto.
-			}
-		}
-		// Left-up
-		for(short r = king->row + 1, c = king->col - 1; r < 8 && c >= 0; r++, c--)
-		{
-			if(threathenCheck(board[r][c], king->owner, isThreathened, BISHOP))
-			{
-				if(isThreathened) goto CheckKingsMoves;
-				// No need for break, because of goto.
-			}
-		}
 
-		// Checking for pawns.
-		short r = king->row;
-		if(whoseTurn == WHITE)
-		{
-			// No threat from pawns.
-			if(r == 7) goto CheckKingsMoves;
-			r++;
+			// Muita nappeja ei voi siirtää muualle!
+			return moves.size();
 		}
-		else
-		{
-			// No threat from pawns.
-			if(r == 0) goto CheckKingsMoves;
-			r--;
-		}
-		short c = king->col;
-		// Right side
-		if(c < 7)
-		if(threathenCheck1Piece(board[r][c], king->owner, isThreathened, PAWN))
-		{
-			if(isThreathened) goto CheckKingsMoves;
-			// No need for break, because of goto.
-		}
-		// Left side
-		if(c > 0)
-		if(threathenCheck1Piece(board[r][c], king->owner, isThreathened, PAWN))
-		{
-			if(isThreathened) goto CheckKingsMoves;
-			// No need for break, because of goto.
-		}
-
-		// Checking for knights
-		r = king->row;
-		c = king->col;
-		// Up
-		if(r < 6)
-		{
-			// Right
-			if(c < 7)
-			if(threathenCheck1Piece(board[r + 2][c + 1], king->owner, isThreathened, KNIGHT))
-			{
-				if(isThreathened) goto CheckKingsMoves;
-				// No need for break, because of goto.
-			}
-			// Left
-			if(c > 0)
-			if(threathenCheck1Piece(board[r + 2][c - 1], king->owner, isThreathened, KNIGHT))
-			{
-				if(isThreathened) goto CheckKingsMoves;
-				// No need for break, because of goto.
-			}
-		}
-		// Right
-		if(c < 6)
-		{
-			// Up
-			if(r < 7)
-			if(threathenCheck1Piece(board[r + 1][c + 2], king->owner, isThreathened, KNIGHT))
-			{
-				if(isThreathened) goto CheckKingsMoves;
-				// No need for break, because of goto.
-			}
-			// Down
-			if(r > 0)
-			if(threathenCheck1Piece(board[r - 1][c + 2], king->owner, isThreathened, KNIGHT))
-			{
-				if(isThreathened) goto CheckKingsMoves;
-				// No need for break, because of goto.
-			}
-		}
-		// Down
-		if(r > 1)
-		{
-			// Right
-			if(c < 7)
-			if(threathenCheck1Piece(board[r - 2][c + 1], king->owner, isThreathened, KNIGHT))
-			{
-				if(isThreathened) goto CheckKingsMoves;
-				// No need for break, because of goto.
-			}
-			// Left
-			if(c > 0)
-			if(threathenCheck1Piece(board[r - 2][c - 1], king->owner, isThreathened, KNIGHT))
-			{
-				if(isThreathened) goto CheckKingsMoves;
-				// No need for break, because of goto.
-			}
-		}
-		// Left
-		if(c > 1)
-		{
-			// Up
-			if(r < 7)
-			if(threathenCheck1Piece(board[r + 1][c - 2], king->owner, isThreathened, KNIGHT))
-			{
-				if(isThreathened) goto CheckKingsMoves;
-				// No need for break, because of goto.
-			}
-			// Down
-			if(r > 0)
-			if(threathenCheck1Piece(board[r - 1][c - 2], king->owner, isThreathened, KNIGHT))
-			{
-				if(isThreathened) goto CheckKingsMoves;
-				// No need for break, because of goto.
-			}
-		}
-	
-		// Jos ei niin voiko liikkua?
-CheckKingsMoves:
-		if(isThreathened) cout << "Check!" << endl;
 		
+		// Voiko kuningas liikkua?
+		// OMA FUNKTIO TÄLLE!
 
 		// Sitten loput napit
 		for(auto p = (*playersPieces).begin()++; p != (*playersPieces).end(); p++)
