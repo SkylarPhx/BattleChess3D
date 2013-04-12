@@ -152,7 +152,7 @@ private:
 			// Continue checking for moves.
 			return false;
 		}
-		else if(p->owner != o)
+		if(p->owner != o)
 		{
 			// Enemy sighted!
 			// Legal move!
@@ -160,6 +160,21 @@ private:
 			// No more moves!
 		}
 		return true;
+	}
+
+	bool moveCheckPawn(Piece* p, list<Move> &m, short fC, short fR, short tC, short tR)
+	{
+		if(p != NULL) return false;	
+		m.emplace_back(fC, fR, tC, tR);
+		return true;
+	}
+
+	void eatCheckPawn(Piece* p, list<Move> &m, Owner o, short fC, short fR, short tC, short tR)
+	{
+		if(p != NULL && p->owner != o)
+		{
+			m.emplace_back(fC, fR, tC, tR);
+		}
 	}
 
 	bool threatenCheck(Piece* p, Owner o, short &threats, Who secondPieceType, Piece* &t)
@@ -183,14 +198,14 @@ private:
 		return true;
 	}
 
-	bool threatenCheck1Piece(Piece* p, Owner o, short &threats, Who pieceType, Piece* &t)
+	void threatenCheck1Piece(Piece* p, Owner o, short &threats, Who pieceType, Piece* &t)
 	{
 		// No piece, no threat.
 		// Continue checking.
-		if(p == NULL) return false;
+		if(p == NULL) return;
 		// Our piece, no threat.
 		// Stop checking.
-		if(p->owner == o) return true;
+		if(p->owner == o) return;
 		// Is it knight or pawn = is the king threatened?
 		if(p->who == pieceType)
 		{
@@ -200,8 +215,6 @@ private:
 			t = p;
 			threats++;
 		}
-		// Stop checking.
-		return true;
 	}
 
 	bool canMoveOwn(Piece* p, Owner o, list<Move> &m, Who secondPieceType, short tC, short tR)
@@ -218,18 +231,27 @@ private:
 		return true;
 	}
 
-	bool canMoveOwn1Piece(Piece* p, Owner o, list<Move> &m, Who pieceType, short tC, short tR)
+	void canMoveOwn1Piece(Piece* p, Owner o, list<Move> &m, Who pieceType, short tC, short tR)
 	{
 		// Ei nappia. Tästä ei voi siirtää kuninkaan suojeluun.
-		if(p == NULL) return false;
-		// Vihollisen nappi. Lopeta tarkistus.
-		if(p->owner != o) return true;
+		if(p == NULL) return;
 		// Oma oikeantyyppinen nappi siirrettävissä kuninkaan suojeluun.
-		if(p->who == pieceType)
+		if(p->owner == o && p->who == pieceType)
 		{
 			m.emplace_back(p->col, p->row, tC, tR);
 		}
-		return true;
+	}
+
+	bool canMoveOwnPawn(Piece* p, Owner o, list<Move> &m, short tC, short tR)
+	{
+		// Ei nappia. Tästä ei voi siirtää kuninkaan suojeluun.
+		if(p == NULL) return true;
+		// Oma oikeantyyppinen nappi siirrettävissä kuninkaan suojeluun.
+		if(p->owner == o && p->who == PAWN)
+		{
+			m.emplace_back(p->col, p->row, tC, tR);
+		}
+		return false;
 	}
 
 	bool isKingThreatened(Piece &king, Piece* &threatener)
@@ -304,9 +326,52 @@ private:
 				break;
 			}
 		}
-		
+
+		// Checking for knights
+		short r = king.row, c = king.col;
+		// Up
+		if(r < 6)
+		{
+			// Right
+			if(c < 7)
+			threatenCheck1Piece(board[r + 2][c + 1], king.owner, threats, KNIGHT, threatener);
+			// Left
+			if(c > 0)
+			threatenCheck1Piece(board[r + 2][c - 1], king.owner, threats, KNIGHT, threatener);
+		}
+		// Right
+		if(c < 6)
+		{
+			// Up
+			if(r < 7)
+			threatenCheck1Piece(board[r + 1][c + 2], king.owner, threats, KNIGHT, threatener);
+			// Down
+			if(r > 0)
+			threatenCheck1Piece(board[r - 1][c + 2], king.owner, threats, KNIGHT, threatener);
+		}
+		// Down
+		if(r > 1)
+		{
+			// Right
+			if(c < 7)
+			threatenCheck1Piece(board[r - 2][c + 1], king.owner, threats, KNIGHT, threatener);
+			// Left
+			if(c > 0)
+			threatenCheck1Piece(board[r - 2][c - 1], king.owner, threats, KNIGHT, threatener);
+		}
+		// Left
+		if(c > 1)
+		{
+			// Up
+			if(r < 7)
+			threatenCheck1Piece(board[r + 1][c - 2], king.owner, threats, KNIGHT, threatener);
+			// Down
+			if(r > 0)
+			threatenCheck1Piece(board[r - 1][c - 2], king.owner, threats, KNIGHT, threatener);
+		}
+
 		// Checking for pawns.
-		short r = king.row;
+		r = king.row;
 		if(whoseTurn == WHITE)
 		{
 			// No threat from pawns.
@@ -319,78 +384,14 @@ private:
 			if(r == 0) goto SkipPawns;
 			r--;
 		}
-		short c = king.col;
+		c = king.col;
 		// Right side
 		if(c < 7)
-		if(threatenCheck1Piece(board[r][c], king.owner, threats, PAWN, threatener))
-		{
-		}
+		threatenCheck1Piece(board[r][c + 1], king.owner, threats, PAWN, threatener);
 		// Left side
 		if(c > 0)
-		if(threatenCheck1Piece(board[r][c], king.owner, threats, PAWN, threatener))
-		{
-		}
+		threatenCheck1Piece(board[r][c - 1], king.owner, threats, PAWN, threatener);
 		SkipPawns:
-
-		// Checking for knights
-		r = king.row;
-		c = king.col;
-		// Up
-		if(r < 6)
-		{
-			// Right
-			if(c < 7)
-			if(threatenCheck1Piece(board[r + 2][c + 1], king.owner, threats, KNIGHT, threatener))
-			{
-			}
-			// Left
-			if(c > 0)
-			if(threatenCheck1Piece(board[r + 2][c - 1], king.owner, threats, KNIGHT, threatener))
-			{
-			}
-		}
-		// Right
-		if(c < 6)
-		{
-			// Up
-			if(r < 7)
-			if(threatenCheck1Piece(board[r + 1][c + 2], king.owner, threats, KNIGHT, threatener))
-			{
-			}
-			// Down
-			if(r > 0)
-			if(threatenCheck1Piece(board[r - 1][c + 2], king.owner, threats, KNIGHT, threatener))
-			{
-			}
-		}
-		// Down
-		if(r > 1)
-		{
-			// Right
-			if(c < 7)
-			if(threatenCheck1Piece(board[r - 2][c + 1], king.owner, threats, KNIGHT, threatener))
-			{
-			}
-			// Left
-			if(c > 0)
-			if(threatenCheck1Piece(board[r - 2][c - 1], king.owner, threats, KNIGHT, threatener))
-			{
-			}
-		}
-		// Left
-		if(c > 1)
-		{
-			// Up
-			if(r < 7)
-			if(threatenCheck1Piece(board[r + 1][c - 2], king.owner, threats, KNIGHT, threatener))
-			{
-			}
-			// Down
-			if(r > 0)
-			if(threatenCheck1Piece(board[r - 1][c - 2], king.owner, threats, KNIGHT, threatener))
-			{
-			}
-		}
 
 		// Useita uhkaajia.
 		// Siispä ei ole mahdollista laittaa eteen mitään.
@@ -478,82 +479,81 @@ private:
 		{
 			// Right
 			if(c < 7)
-			if(canMoveOwn1Piece(board[r + 2][c + 1], o, m, KNIGHT, tC, tR))
-			{
-			}
+			canMoveOwn1Piece(board[r + 2][c + 1], o, m, KNIGHT, tC, tR);
 			// Left
 			if(c > 0)
-			if(canMoveOwn1Piece(board[r + 2][c - 1], o, m, KNIGHT, tC, tR))
-			{
-			}
+			canMoveOwn1Piece(board[r + 2][c - 1], o, m, KNIGHT, tC, tR);
 		}
 		// Right
 		if(c < 6)
 		{
 			// Up
 			if(r < 7)
-			if(canMoveOwn1Piece(board[r + 1][c + 2], o, m, KNIGHT, tC, tR))
-			{
-			}
+			canMoveOwn1Piece(board[r + 1][c + 2], o, m, KNIGHT, tC, tR);
 			// Down
 			if(r > 0)
-			if(canMoveOwn1Piece(board[r - 1][c + 2], o, m, KNIGHT, tC, tR))
-			{
-			}
+			canMoveOwn1Piece(board[r - 1][c + 2], o, m, KNIGHT, tC, tR);
 		}
 		// Down
 		if(r > 1)
 		{
 			// Right
 			if(c < 7)
-			if(canMoveOwn1Piece(board[r - 2][c + 1], o, m, KNIGHT, tC, tR))
-			{
-			}
+			canMoveOwn1Piece(board[r - 2][c + 1], o, m, KNIGHT, tC, tR);
 			// Left
 			if(c > 0)
-			if(canMoveOwn1Piece(board[r - 2][c - 1], o, m, KNIGHT, tC, tR))
-			{
-			}
+			canMoveOwn1Piece(board[r - 2][c - 1], o, m, KNIGHT, tC, tR);
 		}
 		// Left
 		if(c > 1)
 		{
 			// Up
 			if(r < 7)
-			if(canMoveOwn1Piece(board[r + 1][c - 2], o, m, KNIGHT, tC, tR))
-			{
-			}
+			canMoveOwn1Piece(board[r + 1][c - 2], o, m, KNIGHT, tC, tR);
 			// Down
 			if(r > 0)
-			if(canMoveOwn1Piece(board[r - 1][c - 2], o, m, KNIGHT, tC, tR))
-			{
-			}
+			canMoveOwn1Piece(board[r - 1][c - 2], o, m, KNIGHT, tC, tR);
 		}
-		
+
 		// Checking for pawns.
 		r = tR;
-		if(whoseTurn == WHITE)
+		if(whoseTurn == BLACK)
 		{
-			// No threat from pawns.
 			if(r == 7) return;
 			r++;
 		}
 		else
 		{
-			// No threat from pawns.
 			if(r == 0) return;
 			r--;
 		}
 		c = tC;
-		// Right side
-		if(c < 7)
-		if(canMoveOwn1Piece(board[r][c], o, m, PAWN, tC, tR))
+		// Can move pawn to eat.
+		if(board[tR][tC] != NULL)
 		{
+			// Right side
+			if(c < 7)
+			canMoveOwn1Piece(board[r][c + 1], o, m, PAWN, tC, tR);
+			// Left side
+			if(c > 0)
+			canMoveOwn1Piece(board[r][c - 1], o, m, PAWN, tC, tR);
 		}
-		// Left side
-		if(c > 0)
-		if(canMoveOwn1Piece(board[r][c], o, m, PAWN, tC, tR))
+		else
 		{
+			// Can only move pawn.
+			if(canMoveOwnPawn(board[r][c], o, m, tC, tR))
+			{
+				if(whoseTurn == WHITE)
+				{
+					if(r == 2)
+					canMoveOwnPawn(board[r - 1][c], o, m, tC, tR);
+				}
+				else
+				{
+					if(r == 5)
+					canMoveOwnPawn(board[r + 1][c], o, m, tC, tR);
+				}
+			}
 		}
 	}
 
@@ -616,7 +616,7 @@ public:
 
 							if(r > king->row) r--;
 							else if(r < king->row) r++;
-							
+
 							if(c > king->col) c--;
 							else if(c < king->col) c++;
 						}
@@ -802,13 +802,80 @@ public:
 				break;
 			case KNIGHT:
 				{
-					// up then left
-					//for(short r = p->row + 2, c = p->col - 1; r < 8 && c >= 0;
-
+					short r = p->row, c = p->col;
+					// Up
+					if(r < 6)
+					{
+						// Right
+						if(c < 7)
+						moveCheck(board[r + 2][c + 1], moves, whoseTurn, c, r, c + 1, r + 2);
+						// Left
+						if(c > 0)
+						moveCheck(board[r + 2][c - 1], moves, whoseTurn, c, r, c - 1, r + 2);
+					}
+					// Right
+					if(c < 6)
+					{
+						// Up
+						if(r < 7)
+						moveCheck(board[r + 1][c + 2], moves, whoseTurn, c, r, c + 2, r + 1);
+						// Down
+						if(r > 0)
+						moveCheck(board[r - 1][c + 2], moves, whoseTurn, c, r, c + 2, r - 1);
+					}
+					// Down
+					if(r > 1)
+					{
+						// Right
+						if(c < 7)
+						moveCheck(board[r - 2][c + 1], moves, whoseTurn, c, r, c + 1, r - 2);
+						// Left
+						if(c > 0)
+						moveCheck(board[r - 2][c - 1], moves, whoseTurn, c, r, c - 1, r - 2);
+					}
+					// Left
+					if(c > 1)
+					{
+						// Up
+						if(r < 7)
+						moveCheck(board[r + 1][c - 2], moves, whoseTurn, c, r, c - 2, r + 1);
+						// Down
+						if(r > 0)
+						moveCheck(board[r - 1][c - 2], moves, whoseTurn, c, r, c - 2, r - 1);
+					}
 				}
 				break;
 			case PAWN:
 				{
+					short r = p->row, c = p->col;
+					if(whoseTurn == WHITE)
+					{
+						if(r < 7) r++;
+					}
+					else
+					{
+						if(r > 0) r--;
+					}
+					// Right side
+					if(c < 7)
+					eatCheckPawn(board[r][c + 1], moves, whoseTurn, c, p->row, c + 1, r);
+					// Left side
+					if(c > 0)
+					eatCheckPawn(board[r][c - 1], moves, whoseTurn, c, p->row, c - 1, r);
+					// Move forward
+					if(moveCheckPawn(board[r][c], moves, c, p->row, c, r))
+					{
+						if(whoseTurn == WHITE)
+						{
+							if(r == 2)
+							moveCheckPawn(board[r + 1][c], moves, c, p->row, c, r + 1);
+						}
+						else
+						{
+							if(r == 5)
+							moveCheckPawn(board[r - 1][c], moves, c, p->row, c, r - 1);
+						}
+					}
 				}
 				break;
 			}
