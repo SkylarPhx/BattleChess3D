@@ -129,7 +129,7 @@ public:
 
 		whoseTurn = p.whoseTurn;
 	}
-	
+
 	void printColRow(short col, short row)
 	{
 		cout << " " << (char)(col + 97) << (row + 1);
@@ -171,7 +171,7 @@ public:
 		// Stop checking.
 		return true;
 	}
-	
+
 	bool threatenCheck1Piece(Piece* p, Owner o, short &threats, Who pieceType)
 	{
 		// No piece, no threat.
@@ -366,8 +366,13 @@ public:
 
 		// Useita uhkaajia.
 		// Siispä ei ole mahdollista laittaa eteen mitään.
-		if(threats > 1) threatener = NULL; 
+		if(threats > 1) threatener = NULL;
 		return threats;
+	}
+
+	bool checkOwnMovesToHere(Piece* p, list<Move> &m, Owner o, short fC, short fR, short tC, short tR)
+	{
+		return false;
 	}
 
 	short generateLegalMoves(list<Move> &moves)
@@ -383,11 +388,13 @@ public:
 		list<Piece> *playersPieces, *enemysPieces;
 		if(whoseTurn == WHITE)
 		{
+			cout << "*** White's turn ***" << endl;
 			playersPieces = &whitePieces;
 			enemysPieces = &blackPieces;
 		}
 		else
 		{
+			cout << "*** Black's turn ***" << endl;
 			playersPieces = &blackPieces;
 			enemysPieces = &whitePieces;
 		}
@@ -414,14 +421,31 @@ public:
 				switch(threatener->who)
 				{
 				case QUEEN:
-					break;
 				case ROOK:
-					break;
 				case BISHOP:
+					{
+						// Tarkistetaan suora jono nappia kohti nappi mukaanlukien.
+						short row = threatener->row, col = threatener->col;
+						bool increaseRows = (king->row < row) ? true : false;
+						bool increaseCols = (king->col < col) ? true : false;
+						for(short r = row, c = col; r < 8 && c < 8 && r >= 0 && c >= 0; (increaseRows) ? r++ : r--, (increaseCols) ? c++ : c--)
+						{
+							// Kutsu funktiota joka tarkistaa voiko oman napin siirtää tähän kohtaan laudalla.
+							if(checkOwnMovesToHere(board[r][c], moves, whoseTurn, king->col, king->row, c, r))
+							{
+								cout << endl;
+								break;
+							}
+						}
+					}
 					break;
 				case KNIGHT:
+					// Voiko hevosen syödä?
+					// Kutsu funktiota joka tarkistaa voiko oman napin siirtää tähän kohtaan laudalla.
 					break;
 				case PAWN:
+					// Voiko sotilaan syödä?
+					// Kutsu funktiota joka tarkistaa voiko oman napin siirtää tähän kohtaan laudalla.
 					break;
 				}
 			}
@@ -429,7 +453,7 @@ public:
 			// Muita nappeja ei voi siirtää muualle!
 			return moves.size();
 		}
-		
+
 		// Voiko kuningas liikkua?
 		// OMA FUNKTIO TÄLLE!
 
@@ -448,54 +472,78 @@ public:
 					// First up
 					for(short r = p->row + 1; r < 8; r++)
 					{
-						if(moveCheck(board[r][p->col], moves, whoseTurn, p->col, p->row, p->col, r)) break;
+						if(moveCheck(board[r][p->col], moves, whoseTurn, p->col, p->row, p->col, r))
+						{
+							cout << endl;
+							break;
+						}
 					}
-					cout << endl;
 
 					// Then up-right
 					for(short r = p->row + 1, c = p->col + 1; r < 8 && c < 8; r++, c++)
 					{
-						if(moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r)) break;
+						if(moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r))
+						{
+							cout << endl;
+							break;
+						}
 					}
-					cout << endl;
 
 					// Then right
 					for (short c = p->col + 1; c <= 7; c++) {
-						if (moveCheck(board[p->row][c], moves, whoseTurn, p->col, p->row, c, p->row)) break;
+						if (moveCheck(board[p->row][c], moves, whoseTurn, p->col, p->row, c, p->row))
+						{
+							cout << endl;
+							break;
+						}
 					}
-					cout << endl;
 
 					// Then right-down
 					for (short r = p->row - 1, c = p -> col + 1; r >= 0 && c <8; r--, c++) {
-						if (moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r)) break;
+						if (moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r))
+						{
+							cout << endl;
+							break;
+						}
 					}
-					cout << endl;
 
 					// Then down
 					for(short r = p->row - 1; r >= 0; r--)
 					{
-						if(moveCheck(board[r][p->col], moves, whoseTurn, p->col, p->row, p->col, r)) break;
+						if(moveCheck(board[r][p->col], moves, whoseTurn, p->col, p->row, p->col, r))
+						{
+							cout << endl;
+							break;
+						}
 					}
-					cout << endl;
 
 					// Then down-left
 					for (short r = p->row - 1, c = p -> col - 1; r >= 0 && c >= 0; r--, c--) {
-						if (moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r)) break;
+						if (moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r))
+						{
+							cout << endl;
+							break;
+						}
 					}
-					cout << endl;
 
 					// Then left
 					for (short c = p->col - 1; c >= 0; c--) {
-						if (moveCheck(board[p->row][c], moves, whoseTurn, p->col, p->row, c, p->row)) break;
+						if (moveCheck(board[p->row][c], moves, whoseTurn, p->col, p->row, c, p->row))
+						{
+							cout << endl;
+							break;
+						}
 					}
-					cout << endl;
 
 					// Then left-up
 					for(short r = p->row + 1, c = p->col - 1; r < 8 && c >= 0; r++, c--)
 					{
-						if(moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r)) break;
+						if(moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r))
+						{
+							cout << endl;
+							break;
+						}
 					}
-					cout << endl;
 				}
 				break;
 			case ROOK:
@@ -508,28 +556,40 @@ public:
 					// First up
 					for(short r = p->row + 1; r < 8; r++)
 					{
-						if(moveCheck(board[r][p->col], moves, whoseTurn, p->col, p->row, p->col, r)) break;
+						if(moveCheck(board[r][p->col], moves, whoseTurn, p->col, p->row, p->col, r))
+						{
+							cout << endl;
+							break;
+						}
 					}
-					cout << endl;
 
 					// Then right
 					for (short c = p->col + 1; c <= 7; c++) {
-						if (moveCheck(board[p->row][c], moves, whoseTurn, p->col, p->row, c, p->row)) break;
+						if (moveCheck(board[p->row][c], moves, whoseTurn, p->col, p->row, c, p->row))
+						{
+							cout << endl;
+							break;
+						}
 					}
-					cout << endl;
 
 					// Then down
 					for(short r = p->row - 1; r >= 0; r--)
 					{
-						if(moveCheck(board[r][p->col], moves, whoseTurn, p->col, p->row, p->col, r)) break;
+						if(moveCheck(board[r][p->col], moves, whoseTurn, p->col, p->row, p->col, r))
+						{
+							cout << endl;
+							break;
+						}
 					}
-					cout << endl;
 
 					// Then left
 					for (short c = p->col - 1; c >= 0; c--) {
-						if (moveCheck(board[p->row][c], moves, whoseTurn, p->col, p->row, c, p->row)) break;
+						if (moveCheck(board[p->row][c], moves, whoseTurn, p->col, p->row, c, p->row))
+						{
+							cout << endl;
+							break;
+						}
 					}
-					cout << endl;
 				}
 				break;
 			case BISHOP:
@@ -542,28 +602,40 @@ public:
 					// Then up-right
 					for(short r = p->row + 1, c = p->col + 1; r < 8 && c < 8; r++, c++)
 					{
-						if(moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r)) break;
+						if(moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r))
+						{
+							cout << endl;
+							break;
+						}
 					}
-					cout << endl;
 
 					// Then right-down
 					for (short r = p->row - 1, c = p -> col + 1; r >= 0 && c <8; r--, c++) {
-						if (moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r)) break;
+						if (moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r))
+						{
+							cout << endl;
+							break;
+						}
 					}
-					cout << endl;
 
 					// Then left-up
 					for(short r = p->row + 1, c = p->col - 1; r < 8 && c >= 0; r++, c--)
 					{
-						if(moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r)) break;
+						if(moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r))
+						{
+							cout << endl;
+							break;
+						}
 					}
-					cout << endl;
 
 					// Then down-left
 					for (short r = p->row - 1, c = p -> col - 1; r >= 0 && c >= 0; r--, c--) {
-						if (moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r)) break;
+						if (moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r))
+						{
+							cout << endl;
+							break;
+						}
 					}
-					cout << endl;
 				}
 				break;
 			case KNIGHT:
@@ -678,7 +750,7 @@ public:
 			p.debugPrint();
 			cout << (char)(p.col + 97) << (p.row + 1) << " ";
 		}
-		
+
 		cout << "\n\n Black" << endl;
 		for(auto &p: blackPieces)
 		{
