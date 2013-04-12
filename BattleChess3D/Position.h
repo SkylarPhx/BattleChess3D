@@ -398,7 +398,7 @@ private:
 		return threats;
 	}
 
-	bool checkOwnMovesToHere(list<Move> &m, Owner o, short tC, short tR)
+	void checkOwnMovesToHere(list<Move> &m, Owner o, short tC, short tR)
 	{
 		// Samanlainen tarkistus kuin uhkaamisista.
 		// Tässä vaan tarkistetaan toisin päin.
@@ -471,36 +471,8 @@ private:
 			}
 		}
 
-		// Checking for pawns.
-		short r = tR;
-		if(whoseTurn == WHITE)
-		{
-			// No threat from pawns.
-			if(r == 7) goto SkipPawns;
-			r++;
-		}
-		else
-		{
-			// No threat from pawns.
-			if(r == 0) goto SkipPawns;
-			r--;
-		}
-		short c = tC;
-		// Right side
-		if(c < 7)
-		if(canMoveOwn1Piece(board[r][c], o, m, PAWN, tC, tR))
-		{
-		}
-		// Left side
-		if(c > 0)
-		if(canMoveOwn1Piece(board[r][c], o, m, PAWN, tC, tR))
-		{
-		}
-		SkipPawns:
-
 		// Checking for knights
-		r = tR;
-		c = tC;
+		short r = tR, c = tC;
 		// Up
 		if(r < 6)
 		{
@@ -557,8 +529,32 @@ private:
 			{
 			}
 		}
-
-		return true;
+		
+		// Checking for pawns.
+		r = tR;
+		if(whoseTurn == WHITE)
+		{
+			// No threat from pawns.
+			if(r == 7) return;
+			r++;
+		}
+		else
+		{
+			// No threat from pawns.
+			if(r == 0) return;
+			r--;
+		}
+		c = tC;
+		// Right side
+		if(c < 7)
+		if(canMoveOwn1Piece(board[r][c], o, m, PAWN, tC, tR))
+		{
+		}
+		// Left side
+		if(c > 0)
+		if(canMoveOwn1Piece(board[r][c], o, m, PAWN, tC, tR))
+		{
+		}
 	}
 
 public:
@@ -613,15 +609,16 @@ public:
 				case BISHOP:
 					{
 						// Tarkistetaan suora jono nappia kohti nappi mukaanlukien.
-						bool increaseRows = (king->row < row) ? true : false;
-						bool increaseCols = (king->col < col) ? true : false;
-						for(short r = row, c = col; r < 8 && c < 8 && r >= 0 && c >= 0; (increaseRows) ? r++ : r--, (increaseCols) ? c++ : c--)
+						for(short r = row, c = col; r != king->row || c != king->col;)
 						{
 							// Kutsu funktiota joka tarkistaa voiko oman napin siirtää tähän kohtaan laudalla.
-							if(checkOwnMovesToHere(moves, whoseTurn, c, r))
-							{
-								break;
-							}
+							checkOwnMovesToHere(moves, whoseTurn, c, r);
+
+							if(r > king->row) r--;
+							else if(r < king->row) r++;
+							
+							if(c > king->col) c--;
+							else if(c < king->col) c++;
 						}
 					}
 					break;
