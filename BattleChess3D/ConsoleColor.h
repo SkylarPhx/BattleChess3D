@@ -30,6 +30,18 @@ inline std::ostream& blackYellow(std::ostream &s)
     return s;
 }
 
+inline std::ostream& redBlack(std::ostream &s)
+{
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 192);
+    return s;
+}
+
+inline std::ostream& redWhite(std::ostream &s)
+{
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 207);
+    return s;
+}
+
 template <class _Elem, class _Traits>
 std::basic_ostream<_Elem, _Traits>&
 	operator<<(std::basic_ostream<_Elem, _Traits>& i, int& c)

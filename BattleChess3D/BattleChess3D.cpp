@@ -23,7 +23,32 @@ int _tmain(int argc, _TCHAR* argv[])
 		position = new Position(oldPosition);
 		list<Move> moves;
 		cout << "Legal moves: " << position->generateLegalMoves(moves) << endl;
-		cout << "\nGive a move command like E2-E4\nRanges: [A:H][1:8]" << endl;
+		for(auto &m: moves)
+		{
+			switch(position->whoIsOn(m.fromCol, m.fromRow))
+			{
+			case KING:
+				cout << "King ";
+				break;
+			case QUEEN:
+				cout << "Queen ";
+				break;
+			case ROOK:
+				cout << "Rook ";
+				break;
+			case BISHOP:
+				cout << "Bishop ";
+				break;
+			case KNIGHT:
+				cout << "Knight ";
+				break;
+			case PAWN:
+				cout << "Pawn ";
+				break;
+			}
+			cout << (char)(m.fromCol + 97) << (m.fromRow + 1) << "-" << (char)(m.toCol + 97) << (m.toRow + 1) << endl;
+		}
+		cout << "\nGive a move command like e2-e4\nRanges: [a:h][1:8]" << endl;
 		getline(cin, command, '\n');
 		if(command.size() == 5)
 		{
