@@ -47,6 +47,11 @@ public:
 
 	~Position(){}
 
+	Who whoIsOn(short col, short row)
+	{
+		return board[col][row]->who;
+	}
+
 	// Removes all Pieces from the chess board.
 	void clear()
 	{
@@ -180,9 +185,37 @@ public:
 		// Our piece, no threat.
 		// Stop checking.
 		if(p->owner == o) return true;
-		// Is it queen or rook/bishop = is the king threatened?
+		// Is it knight or pawn = is the king threatened?
 		if(p->who == pieceType) threats++;
 		// Stop checking.
+		return true;
+	}
+
+	bool canMoveOwn(Piece* p, Owner o, list<Move> &m, Who secondPieceType, short tC, short tR)
+	{
+		// Ei nappia. Tästä ei voi siirtää kuninkaan suojeluun.
+		if(p == NULL) return false;
+		// Vihollisen nappi. Lopeta tarkistus.
+		if(p->owner != o) return true;
+		// Oma oikeantyyppinen nappi siirrettävissä kuninkaan suojeluun.
+		if(p->who == QUEEN || p->who == secondPieceType)
+		{
+			m.emplace_back(p->col, p->row, tC, tR);
+		}
+		return true;
+	}
+
+	bool canMoveOwn1Piece(Piece* p, Owner o, list<Move> &m, Who pieceType, short tC, short tR)
+	{
+		// Ei nappia. Tästä ei voi siirtää kuninkaan suojeluun.
+		if(p == NULL) return false;
+		// Vihollisen nappi. Lopeta tarkistus.
+		if(p->owner != o) return true;
+		// Oma oikeantyyppinen nappi siirrettävissä kuninkaan suojeluun.
+		if(p->who == pieceType)
+		{
+			m.emplace_back(p->col, p->row, tC, tR);
+		}
 		return true;
 	}
 
@@ -370,9 +403,170 @@ public:
 		return threats;
 	}
 
-	bool checkOwnMovesToHere(Piece* p, list<Move> &m, Owner o, short fC, short fR, short tC, short tR)
+	bool checkOwnMovesToHere(list<Move> &m, Owner o, short tC, short tR)
 	{
-		return false;
+		// Samanlainen tarkistus kuin uhkaamisista.
+		// Tässä vaan tarkistetaan toisin päin.
+
+		// Uhkien määrä (tarvitaan myöhemmin)
+		short threats = 0;
+
+		// Up/Down/Left/Right: queens, rooks
+		// Up
+		for(short r = tR + 1; r < 8; r++)
+		{
+			if(canMoveOwn(board[r][tC], o, m, ROOK, tC, tR))
+			{
+				break;
+			}
+		}
+		// Right
+		for(short c = tC + 1; c < 8; c++)
+		{
+			if(canMoveOwn(board[tR][c], o, m, ROOK, tC, tR))
+			{
+				break;
+			}
+		}
+		// Down
+		for(short r = tR - 1; r >= 0; r--)
+		{
+			if(canMoveOwn(board[r][tC], o, m, ROOK, tC, tR))
+			{
+				break;
+			}
+		}
+		// Left
+		for(short c = tC - 1; c >= 0; c--)
+		{
+			if(canMoveOwn(board[tR][c], o, m, ROOK, tC, tR))
+			{
+				break;
+			}
+		}
+
+		// Sideways: queens, bishops
+		// Up-right
+		for(short r = tR + 1, c = tC + 1; r < 8 && c < 8; r++, c++)
+		{
+			if(canMoveOwn(board[r][c], o, m, BISHOP, tC, tR))
+			{
+				break;
+			}
+		}
+		// Right-down
+		for(short r = tR - 1, c = tC + 1; r >= 0 && c < 8; r--, c++)
+		{
+			if(canMoveOwn(board[r][c], o, m, BISHOP, tC, tR))
+			{
+				break;
+			}
+		}
+		// Down-left
+		for(short r = tR - 1, c = tC - 1; r >= 0 && c >= 0; r--, c--)
+		{
+			if(canMoveOwn(board[r][c], o, m, BISHOP, tC, tR))
+			{
+				break;
+			}
+		}
+		// Left-up
+		for(short r = tR + 1, c = tC - 1; r < 8 && c >= 0; r++, c--)
+		{
+			if(canMoveOwn(board[r][c], o, m, BISHOP, tC, tR))
+			{
+				break;
+			}
+		}
+
+		// Checking for pawns.
+		short r = tR;
+		if(whoseTurn == WHITE)
+		{
+			// No threat from pawns.
+			if(r == 7) goto SkipPawns;
+			r++;
+		}
+		else
+		{
+			// No threat from pawns.
+			if(r == 0) goto SkipPawns;
+			r--;
+		}
+		short c = tC;
+		// Right side
+		if(c < 7)
+		if(canMoveOwn1Piece(board[r][c], o, m, PAWN, tC, tR))
+		{
+		}
+		// Left side
+		if(c > 0)
+		if(canMoveOwn1Piece(board[r][c], o, m, PAWN, tC, tR))
+		{
+		}
+		SkipPawns:
+
+		// Checking for knights
+		r = tR;
+		c = tC;
+		// Up
+		if(r < 6)
+		{
+			// Right
+			if(c < 7)
+			if(canMoveOwn1Piece(board[r + 2][c + 1], o, m, KNIGHT, tC, tR))
+			{
+			}
+			// Left
+			if(c > 0)
+			if(canMoveOwn1Piece(board[r + 2][c - 1], o, m, KNIGHT, tC, tR))
+			{
+			}
+		}
+		// Right
+		if(c < 6)
+		{
+			// Up
+			if(r < 7)
+			if(canMoveOwn1Piece(board[r + 1][c + 2], o, m, KNIGHT, tC, tR))
+			{
+			}
+			// Down
+			if(r > 0)
+			if(canMoveOwn1Piece(board[r - 1][c + 2], o, m, KNIGHT, tC, tR))
+			{
+			}
+		}
+		// Down
+		if(r > 1)
+		{
+			// Right
+			if(c < 7)
+			if(canMoveOwn1Piece(board[r - 2][c + 1], o, m, KNIGHT, tC, tR))
+			{
+			}
+			// Left
+			if(c > 0)
+			if(canMoveOwn1Piece(board[r - 2][c - 1], o, m, KNIGHT, tC, tR))
+			{
+			}
+		}
+		// Left
+		if(c > 1)
+		{
+			// Up
+			if(r < 7)
+			if(canMoveOwn1Piece(board[r + 1][c - 2], o, m, KNIGHT, tC, tR))
+			{
+			}
+			// Down
+			if(r > 0)
+			if(canMoveOwn1Piece(board[r - 1][c - 2], o, m, KNIGHT, tC, tR))
+			{
+			}
+		}
+
+		return true;
 	}
 
 	short generateLegalMoves(list<Move> &moves)
@@ -418,6 +612,7 @@ public:
 				// Tarkista pelkästään voiko tähän väliin laittaa nappeja.
 				// TEE OMA FUNKTIO JOSSA TARKISTETAAN VOIKO OMAN LAITTAA RUUTUUN!
 				// Vihollistyypin perusteella katsotaan mitä ruutuja tarkistetaan!
+				short row = threatener->row, col = threatener->col;
 				switch(threatener->who)
 				{
 				case QUEEN:
@@ -425,13 +620,12 @@ public:
 				case BISHOP:
 					{
 						// Tarkistetaan suora jono nappia kohti nappi mukaanlukien.
-						short row = threatener->row, col = threatener->col;
 						bool increaseRows = (king->row < row) ? true : false;
 						bool increaseCols = (king->col < col) ? true : false;
 						for(short r = row, c = col; r < 8 && c < 8 && r >= 0 && c >= 0; (increaseRows) ? r++ : r--, (increaseCols) ? c++ : c--)
 						{
 							// Kutsu funktiota joka tarkistaa voiko oman napin siirtää tähän kohtaan laudalla.
-							if(checkOwnMovesToHere(board[r][c], moves, whoseTurn, king->col, king->row, c, r))
+							if(checkOwnMovesToHere(moves, whoseTurn, c, r))
 							{
 								cout << endl;
 								break;
@@ -442,10 +636,12 @@ public:
 				case KNIGHT:
 					// Voiko hevosen syödä?
 					// Kutsu funktiota joka tarkistaa voiko oman napin siirtää tähän kohtaan laudalla.
+					checkOwnMovesToHere(moves, whoseTurn, col, row);
 					break;
 				case PAWN:
 					// Voiko sotilaan syödä?
 					// Kutsu funktiota joka tarkistaa voiko oman napin siirtää tähän kohtaan laudalla.
+					checkOwnMovesToHere(moves, whoseTurn, col, row);
 					break;
 				}
 			}
