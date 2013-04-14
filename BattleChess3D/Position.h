@@ -59,6 +59,7 @@ public:
 	// bit 3 = Black's kingside
 	// bit 4 = Black's queenside
 	signed char canCastle;
+	bool canEnPassant;
 
 	Who whoIsOn(short col, short row)
 	{
@@ -128,6 +129,7 @@ public:
 
 		whoseTurn = WHITE;
 		canCastle = 15;
+		canEnPassant = false;
 	}
 
 	void copyPosition(Position &p)
@@ -148,6 +150,7 @@ public:
 
 		whoseTurn = p.whoseTurn;
 		canCastle = p.canCastle;
+		canEnPassant = p.canEnPassant;
 	}
 
 	void printColRow(short col, short row)
@@ -187,6 +190,14 @@ private:
 	void eatCheckPawn(Piece* p, list<Move> &m, Owner o, short fC, short fR, short tC, short tR)
 	{
 		if(p != NULL && p->owner != o)
+		{
+			m.emplace_back(fC, fR, tC, tR);
+		}
+	}
+
+	void enPassantCheckPawn(Piece* p, list<Move> &m, Owner o, short fC, short fR, short tC, short tR)
+	{
+		if(p != NULL && p->owner != o && p->who == PAWN)
 		{
 			m.emplace_back(fC, fR, tC, tR);
 		}
@@ -248,6 +259,17 @@ private:
 		if(p->owner == o && p->who == pieceType)
 		{
 			m.emplace_back(p->col, p->row, tC, tR);
+		}
+	}
+
+	void canMoveEnPassant(Piece* p, Owner o, list<Move> &m, short tC, short row)
+	{
+		// Ei nappia. Tästä ei voi siirtää kuninkaan suojeluun.
+		if(p == NULL) return;
+		// Oma oikeantyyppinen nappi siirrettävissä kuninkaan suojeluun.
+		if(p->owner == o && p->who == PAWN)
+		{
+			m.emplace_back(p->col, row, tC, p->row);
 		}
 	}
 
@@ -540,10 +562,18 @@ private:
 		{
 			// Right side
 			if(c < 7)
-			canMoveOwn1Piece(board[r][c + 1], o, m, PAWN, tC, tR);
+			{
+				canMoveOwn1Piece(board[r][c + 1], o, m, PAWN, tC, tR);
+				if(canEnPassant)
+				canMoveEnPassant(board[tR][c + 1], o, m, tC, r);
+			}
 			// Left side
 			if(c > 0)
-			canMoveOwn1Piece(board[r][c - 1], o, m, PAWN, tC, tR);
+			{
+				canMoveOwn1Piece(board[r][c - 1], o, m, PAWN, tC, tR);
+				if(canEnPassant)
+				canMoveEnPassant(board[tR][c - 1], o, m, tC, r);
+			}
 		}
 		else
 		{
@@ -964,10 +994,18 @@ public:
 					}
 					// Right side
 					if(c < 7)
-					eatCheckPawn(board[r][c + 1], moves, whoseTurn, c, p->row, c + 1, r);
+					{
+						eatCheckPawn(board[r][c + 1], moves, whoseTurn, c, p->row, c + 1, r);
+						if(canEnPassant)
+						enPassantCheckPawn(board[p->row][c + 1], moves, whoseTurn, c, p->row, c + 1, r);
+					}
 					// Left side
 					if(c > 0)
-					eatCheckPawn(board[r][c - 1], moves, whoseTurn, c, p->row, c - 1, r);
+					{
+						eatCheckPawn(board[r][c - 1], moves, whoseTurn, c, p->row, c - 1, r);
+						if(canEnPassant)
+						enPassantCheckPawn(board[p->row][c - 1], moves, whoseTurn, c, p->row, c - 1, r);
+					}
 					// Move forward
 					if(moveCheckPawn(board[r][c], moves, c, p->row, c, r))
 					{
@@ -1062,6 +1100,9 @@ public:
 				else
 				canCastle &= ~8;
 			}
+			break;
+		case PAWN:
+			if(canEnPassant)
 			break;
 		}
 	}
