@@ -27,7 +27,7 @@ public:
 	Who who;
 	Owner owner;
 	// Location on the chess board.
-	signed char row, col;
+	short row, col;
 
 	Piece(Owner o, Who w, Rank r, File c)
 	{

@@ -48,7 +48,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			}
 			cout << (char)(m.fromCol + 97) << (m.fromRow + 1) << "-" << (char)(m.toCol + 97) << (m.toRow + 1) << endl;
 		}
-		cout << "Castling bits: " << (short)position->canCastle << endl;
+		position->showSpecialInfo();
 		cout << "\nGive a move command like e2-e4\nRanges: [a:h][1:8]" << endl;
 		getline(cin, command, '\n');
 		if(command.size() > 4)

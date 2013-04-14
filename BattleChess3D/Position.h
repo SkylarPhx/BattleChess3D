@@ -6,13 +6,15 @@ using namespace std;
 class Move
 {
 public:
-	signed char fromRow, fromCol, toRow, toCol;
+	short fromRow, fromCol, toRow, toCol;
 	// 1 = Kingside castling
 	// 2 = Queenside castling
-	signed char special;
+	// 3 = Double pawn move
+	// 4 = En Passant move
+	short special;
 
 	Move(){}
-	Move(signed char fC, signed char fR, signed char tC, signed char tR, signed char type = 0)
+	Move(short fC, short fR, short tC, short tR, short type = 0)
 	{
 		fromCol = fC;
 		fromRow = fR;
@@ -28,6 +30,7 @@ public:
 		fromRow = command[1] - 49;
 		toCol = command[3] - 97;
 		toRow = command[4] - 49;
+		special = 0;
 	}
 	void setSpecial(char c)
 	{
@@ -44,6 +47,13 @@ private:
 	array<array<Piece*, 8>, 8> board;
 	// Keeps track of turns.
 	Owner whoseTurn;
+	// bit 1 = White's kingside
+	// bit 2 = White's queenside
+	// bit 3 = Black's kingside
+	// bit 4 = Black's queenside
+	short canCastle;
+	// For en passant move.
+	Piece *passer;
 
 public:
 	Position(){}
@@ -54,12 +64,11 @@ public:
 
 	~Position(){}
 
-	// bit 1 = White's kingside
-	// bit 2 = White's queenside
-	// bit 3 = Black's kingside
-	// bit 4 = Black's queenside
-	signed char canCastle;
-	bool canEnPassant;
+	void showSpecialInfo()
+	{
+		cout << "Castling bits: " << canCastle << endl;
+		cout << "En Passer: " << passer << endl;
+	}
 
 	Who whoIsOn(short col, short row)
 	{
@@ -129,7 +138,7 @@ public:
 
 		whoseTurn = WHITE;
 		canCastle = 15;
-		canEnPassant = false;
+		passer = NULL;
 	}
 
 	void copyPosition(Position &p)
@@ -150,7 +159,7 @@ public:
 
 		whoseTurn = p.whoseTurn;
 		canCastle = p.canCastle;
-		canEnPassant = p.canEnPassant;
+		passer = p.passer;
 	}
 
 	void printColRow(short col, short row)
@@ -180,10 +189,10 @@ private:
 		return true;
 	}
 
-	bool moveCheckPawn(Piece* p, list<Move> &m, short fC, short fR, short tC, short tR)
+	bool moveCheckPawn(Piece* p, list<Move> &m, short fC, short fR, short tC, short tR, short two = 0)
 	{
 		if(p != NULL) return false;
-		m.emplace_back(fC, fR, tC, tR);
+		m.emplace_back(fC, fR, tC, tR, two);
 		return true;
 	}
 
@@ -199,7 +208,7 @@ private:
 	{
 		if(p != NULL && p->owner != o && p->who == PAWN)
 		{
-			m.emplace_back(fC, fR, tC, tR);
+			m.emplace_back(fC, fR, tC, tR, 4);
 		}
 	}
 
@@ -262,25 +271,25 @@ private:
 		}
 	}
 
-	void canMoveEnPassant(Piece* p, Owner o, list<Move> &m, short tC, short row)
+	void canMoveEnPassant(Piece* p, Owner o, list<Move> &m, short tC, short tR)
 	{
 		// Ei nappia. Tästä ei voi siirtää kuninkaan suojeluun.
 		if(p == NULL) return;
 		// Oma oikeantyyppinen nappi siirrettävissä kuninkaan suojeluun.
 		if(p->owner == o && p->who == PAWN)
 		{
-			m.emplace_back(p->col, row, tC, p->row);
+			m.emplace_back(p->col, p->row, tC, tR, 4);
 		}
 	}
 
-	bool canMoveOwnPawn(Piece* p, Owner o, list<Move> &m, short tC, short tR)
+	bool canMoveOwnPawn(Piece* p, Owner o, list<Move> &m, short tC, short tR, short two = 0)
 	{
 		// Ei nappia. Tästä ei voi siirtää kuninkaan suojeluun.
 		if(p == NULL) return true;
 		// Oma oikeantyyppinen nappi siirrettävissä kuninkaan suojeluun.
 		if(p->owner == o && p->who == PAWN)
 		{
-			m.emplace_back(p->col, p->row, tC, tR);
+			m.emplace_back(p->col, p->row, tC, tR, two);
 		}
 		return false;
 	}
@@ -564,31 +573,35 @@ private:
 			if(c < 7)
 			{
 				canMoveOwn1Piece(board[r][c + 1], o, m, PAWN, tC, tR);
-				if(canEnPassant)
-				canMoveEnPassant(board[tR][c + 1], o, m, tC, r);
 			}
 			// Left side
 			if(c > 0)
 			{
 				canMoveOwn1Piece(board[r][c - 1], o, m, PAWN, tC, tR);
-				if(canEnPassant)
-				canMoveEnPassant(board[tR][c - 1], o, m, tC, r);
 			}
 		}
 		else
 		{
+			if(passer)
+			{
+				cout << "En passant to protect king?" << endl;
+				if(c < 7)
+					canMoveEnPassant(board[passer->row][passer->col + 1], o, m, tC, tR);
+				if(c > 0)
+					canMoveEnPassant(board[passer->row][passer->col - 1], o, m, tC, tR);
+			}
 			// Can only move pawn.
 			if(canMoveOwnPawn(board[r][c], o, m, tC, tR))
 			{
 				if(whoseTurn == WHITE)
 				{
 					if(r == 2)
-					canMoveOwnPawn(board[r - 1][c], o, m, tC, tR);
+					canMoveOwnPawn(board[r - 1][c], o, m, tC, tR, 3);
 				}
 				else
 				{
 					if(r == 5)
-					canMoveOwnPawn(board[r + 1][c], o, m, tC, tR);
+					canMoveOwnPawn(board[r + 1][c], o, m, tC, tR, 3);
 				}
 			}
 		}
@@ -647,6 +660,9 @@ public:
 
 		// Voiko kuningas liikkua?
 		{
+			// "Remove" the king from the board to have proper checks.
+			board[king->row][king->col] = NULL;
+
 			// First up
 			short r = king->row + 1;
 			if(r < 8)
@@ -699,6 +715,9 @@ public:
 			{
 				canKingMove(board[r][c], moves, whoseTurn, king->col, king->row, c, r);
 			}
+
+			// Restore the king to the board.
+			board[king->row][king->col] = king;
 		}
 
 		// Uhataanko?
@@ -996,14 +1015,14 @@ public:
 					if(c < 7)
 					{
 						eatCheckPawn(board[r][c + 1], moves, whoseTurn, c, p->row, c + 1, r);
-						if(canEnPassant)
+						if(passer)
 						enPassantCheckPawn(board[p->row][c + 1], moves, whoseTurn, c, p->row, c + 1, r);
 					}
 					// Left side
 					if(c > 0)
 					{
 						eatCheckPawn(board[r][c - 1], moves, whoseTurn, c, p->row, c - 1, r);
-						if(canEnPassant)
+						if(passer)
 						enPassantCheckPawn(board[p->row][c - 1], moves, whoseTurn, c, p->row, c - 1, r);
 					}
 					// Move forward
@@ -1012,12 +1031,12 @@ public:
 						if(whoseTurn == WHITE)
 						{
 							if(r == 2)
-							moveCheckPawn(board[r + 1][c], moves, c, p->row, c, r + 1);
+							moveCheckPawn(board[r + 1][c], moves, c, p->row, c, r + 1, 3);
 						}
 						else
 						{
 							if(r == 5)
-							moveCheckPawn(board[r - 1][c], moves, c, p->row, c, r - 1);
+							moveCheckPawn(board[r - 1][c], moves, c, p->row, c, r - 1, 3);
 						}
 					}
 				}
@@ -1035,16 +1054,13 @@ public:
 		{
 			// Delete eatable chess piece.
 			list<Piece>* list = (to->owner == BLACK) ? &blackPieces : &whitePieces;
-			auto i = (*list).end();
-			while(true)
+			for(auto i = list->end(); --i != list->begin();)
 			{
-				i--;
-				if(i->row == m.toRow && i->col == m.toCol)
+				if(i->col == m.toCol && i->row == m.toRow)
 				{
-					(*list).erase(i);
+					list->erase(i);
 					break;
 				}
-				if(i == (*list).begin()) break;
 			}
 		}
 
@@ -1063,7 +1079,7 @@ public:
 		switch(from->who)
 		{
 		case KING:
-			if(m.special > 0)
+			if(m.special)
 			{
 				if(m.special == 1)
 				{
@@ -1084,7 +1100,8 @@ public:
 			{
 				canCastle &= ~12;
 			}
-			break;
+			passer = NULL;
+			return;
 		case ROOK:
 			if(from->col == H)
 			{
@@ -1100,11 +1117,34 @@ public:
 				else
 				canCastle &= ~8;
 			}
-			break;
-		case PAWN:
-			if(canEnPassant)
-			break;
+			passer = NULL;
+			return;
 		}
+
+		// Has to be pawn.
+		if(m.special >= 3)
+		{
+			if(m.special == 3)
+			{
+				cout << "En passant appeared!" << endl;
+				passer = from;
+				return;
+			}
+			cout << "Deleting en passant... ";
+			list<Piece>* list = (from->owner == WHITE) ? &blackPieces : &whitePieces;
+			for(auto i = list->end(); --i != list->begin();)
+			{
+				if(i->col == passer->col && i->row == passer->row)
+				{
+					board[passer->row][passer->col] = NULL;
+					list->erase(i);
+					cout << "done!" << endl;
+					break;
+				}
+			}
+		}
+		// This clears the en passant possibilty.
+		passer = NULL;
 	}
 
 	void changeTurn()
