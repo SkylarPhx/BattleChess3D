@@ -6,16 +6,19 @@ using namespace std;
 class Move
 {
 public:
-	short fromRow, fromCol, toRow, toCol;
-	bool isCastling;
+	signed char fromRow, fromCol, toRow, toCol;
+	// 1 = Kingside castling
+	// 2 = Queenside castling
+	signed char special;
 
 	Move(){}
-	Move(short fC, short fR, short tC, short tR)
+	Move(signed char fC, signed char fR, signed char tC, signed char tR, signed char type = 0)
 	{
 		fromCol = fC;
 		fromRow = fR;
 		toCol = tC;
 		toRow = tR;
+		special = type;
 	}
 	~Move(){}
 
@@ -25,6 +28,10 @@ public:
 		fromRow = command[1] - 49;
 		toCol = command[3] - 97;
 		toRow = command[4] - 49;
+	}
+	void setSpecial(char c)
+	{
+		special = c - 48;
 	}
 };
 
@@ -46,6 +53,12 @@ public:
 	}
 
 	~Position(){}
+
+	// bit 1 = White's kingside
+	// bit 2 = White's queenside
+	// bit 3 = Black's kingside
+	// bit 4 = Black's queenside
+	signed char canCastle;
 
 	Who whoIsOn(short col, short row)
 	{
@@ -114,6 +127,7 @@ public:
 		}
 
 		whoseTurn = WHITE;
+		canCastle = 15;
 	}
 
 	void copyPosition(Position &p)
@@ -133,6 +147,7 @@ public:
 		}
 
 		whoseTurn = p.whoseTurn;
+		canCastle = p.canCastle;
 	}
 
 	void printColRow(short col, short row)
@@ -164,7 +179,7 @@ private:
 
 	bool moveCheckPawn(Piece* p, list<Move> &m, short fC, short fR, short tC, short tR)
 	{
-		if(p != NULL) return false;	
+		if(p != NULL) return false;
 		m.emplace_back(fC, fR, tC, tR);
 		return true;
 	}
@@ -560,6 +575,17 @@ private:
 		}
 	}
 
+	bool isClearPath(Piece* p, Owner o, short col, short row)
+	{
+		if(p == NULL)
+		{
+			// Uhataanko tätä ruutua?
+			Piece *threatener = NULL;
+			return !isKingThreatened(o, col, row, threatener);
+		}
+		return false;
+	}
+
 public:
 	short generateLegalMoves(list<Move> &moves)
 	{
@@ -694,6 +720,33 @@ public:
 			// Muita nappeja ei voi siirtää muualle!
 			return moves.size();
 		}
+
+		// Tarkista tornitus
+		if(whoseTurn == WHITE && (canCastle & 1) || whoseTurn == BLACK && (canCastle & 4))
+		{
+			for(short c = king->col + 1; c < H; c++)
+			{
+				if(!isClearPath(board[king->row][c], whoseTurn, c, king->row))
+				{
+					goto EndOfCastlingCheck;
+				}
+			}
+			// Luo tornitussiirto
+			moves.emplace_back(E, king->row, G, king->row, 1);
+		}
+		if(whoseTurn == WHITE && (canCastle & 2) || whoseTurn == BLACK && (canCastle & 8))
+		{
+			for(short c = king->col - 1; c > B; c--)
+			{
+				if(!isClearPath(board[king->row][c], whoseTurn, c, king->row))
+				{
+					goto EndOfCastlingCheck;
+				}
+			}
+			// Luo tornitussiirto
+			moves.emplace_back(E, king->row, C, king->row, 2);
+		}
+		EndOfCastlingCheck:
 
 		// Sitten loput napit
 		for(auto p = (*playersPieces).begin()++; p != (*playersPieces).end(); p++)
@@ -956,6 +1009,7 @@ public:
 				if(i == (*list).begin()) break;
 			}
 		}
+
 		Piece* from = board[m.fromRow][m.fromCol];
 		if(from != NULL)
 		{
@@ -964,8 +1018,52 @@ public:
 			from->col = m.toCol;
 		}
 		// Change pointers to chess pieces on the chess board.
-		board[m.toRow][m.toCol] = board[m.fromRow][m.fromCol];
+		board[m.toRow][m.toCol] = from;
 		board[m.fromRow][m.fromCol] = NULL;
+
+		if(canCastle)
+		switch(from->who)
+		{
+		case KING:
+			if(m.special > 0)
+			{
+				if(m.special == 1)
+				{
+					Move kingSide(H, from->row, F, from->row);
+					executeMove(kingSide);
+				}
+				else if(m.special == 2)
+				{
+					Move queenSide(A, from->row, D, from->row);
+					executeMove(queenSide);
+				}
+			}
+			if(from->owner == WHITE)
+			{
+				canCastle &= ~3;
+			}
+			else
+			{
+				canCastle &= ~12;
+			}
+			break;
+		case ROOK:
+			if(from->col == H)
+			{
+				if(from->owner == WHITE)
+				canCastle &= ~1;
+				else
+				canCastle &= ~4;
+			}
+			else if(from->col == A)
+			{
+				if(from->owner == WHITE)
+				canCastle &= ~2;
+				else
+				canCastle &= ~8;
+			}
+			break;
+		}
 	}
 
 	void changeTurn()

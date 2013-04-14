@@ -48,15 +48,18 @@ int _tmain(int argc, _TCHAR* argv[])
 			}
 			cout << (char)(m.fromCol + 97) << (m.fromRow + 1) << "-" << (char)(m.toCol + 97) << (m.toRow + 1) << endl;
 		}
+		cout << "Castling bits: " << (short)position->canCastle << endl;
 		cout << "\nGive a move command like e2-e4\nRanges: [a:h][1:8]" << endl;
 		getline(cin, command, '\n');
-		if(command.size() == 5)
+		if(command.size() > 4)
 		{
 			if(command[0] < 97 || command[0] > 104) continue;
 			if(command[1] < 49 || command[1] > 56) continue;
 			if(command[3] < 97 || command[3] > 104) continue;
 			if(command[4] < 49 || command[4] > 56) continue;
 			move.setMove(command);
+			if(command.size() > 6)
+			move.setSpecial(command[6]);
 			position->executeMove(move);
 		}
 
