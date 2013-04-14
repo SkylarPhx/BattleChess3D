@@ -188,9 +188,6 @@ private:
 		// Is it queen or rook/bishop = is the king threatened?
 		if(p->who == QUEEN || p->who == secondPieceType)
 		{
-			cout << "Found a threat at";
-			printColRow(p->col, p->row);
-			cout << endl;
 			t = p;
 			threats++;
 		}
@@ -209,9 +206,6 @@ private:
 		// Is it knight or pawn = is the king threatened?
 		if(p->who == pieceType)
 		{
-			cout << "Found a threat at";
-			printColRow(p->col, p->row);
-			cout << endl;
 			t = p;
 			threats++;
 		}
@@ -254,40 +248,40 @@ private:
 		return false;
 	}
 
-	bool isKingThreatened(Piece &king, Piece* &threatener)
+	bool isKingThreatened(Owner o, short col, short row, Piece* &threatener)
 	{
 		// Uhkien määrä (tarvitaan myöhemmin)
 		short threats = 0;
 
 		// Up/Down/Left/Right: queens, rooks
 		// Up
-		for(short r = king.row + 1; r < 8; r++)
+		for(short r = row + 1; r < 8; r++)
 		{
-			if(threatenCheck(board[r][king.col], king.owner, threats, ROOK, threatener))
+			if(threatenCheck(board[r][col], o, threats, ROOK, threatener))
 			{
 				break;
 			}
 		}
 		// Right
-		for(short c = king.col + 1; c < 8; c++)
+		for(short c = col + 1; c < 8; c++)
 		{
-			if(threatenCheck(board[king.row][c], king.owner, threats, ROOK, threatener))
+			if(threatenCheck(board[row][c], o, threats, ROOK, threatener))
 			{
 				break;
 			}
 		}
 		// Down
-		for(short r = king.row - 1; r >= 0; r--)
+		for(short r = row - 1; r >= 0; r--)
 		{
-			if(threatenCheck(board[r][king.col], king.owner, threats, ROOK, threatener))
+			if(threatenCheck(board[r][col], o, threats, ROOK, threatener))
 			{
 				break;
 			}
 		}
 		// Left
-		for(short c = king.col - 1; c >= 0; c--)
+		for(short c = col - 1; c >= 0; c--)
 		{
-			if(threatenCheck(board[king.row][c], king.owner, threats, ROOK, threatener))
+			if(threatenCheck(board[row][c], o, threats, ROOK, threatener))
 			{
 				break;
 			}
@@ -295,102 +289,100 @@ private:
 
 		// Sideways: queens, bishops
 		// Up-right
-		for(short r = king.row + 1, c = king.col + 1; r < 8 && c < 8; r++, c++)
+		for(short r = row + 1, c = col + 1; r < 8 && c < 8; r++, c++)
 		{
-			if(threatenCheck(board[r][c], king.owner, threats, BISHOP, threatener))
+			if(threatenCheck(board[r][c], o, threats, BISHOP, threatener))
 			{
 				break;
 			}
 		}
 		// Right-down
-		for(short r = king.row - 1, c = king.col + 1; r >= 0 && c < 8; r--, c++)
+		for(short r = row - 1, c = col + 1; r >= 0 && c < 8; r--, c++)
 		{
-			if(threatenCheck(board[r][c], king.owner, threats, BISHOP, threatener))
+			if(threatenCheck(board[r][c], o, threats, BISHOP, threatener))
 			{
 				break;
 			}
 		}
 		// Down-left
-		for(short r = king.row - 1, c = king.col - 1; r >= 0 && c >= 0; r--, c--)
+		for(short r = row - 1, c = col - 1; r >= 0 && c >= 0; r--, c--)
 		{
-			if(threatenCheck(board[r][c], king.owner, threats, BISHOP, threatener))
+			if(threatenCheck(board[r][c], o, threats, BISHOP, threatener))
 			{
 				break;
 			}
 		}
 		// Left-up
-		for(short r = king.row + 1, c = king.col - 1; r < 8 && c >= 0; r++, c--)
+		for(short r = row + 1, c = col - 1; r < 8 && c >= 0; r++, c--)
 		{
-			if(threatenCheck(board[r][c], king.owner, threats, BISHOP, threatener))
+			if(threatenCheck(board[r][c], o, threats, BISHOP, threatener))
 			{
 				break;
 			}
 		}
 
 		// Checking for knights
-		short r = king.row, c = king.col;
+		short r = row, c = col;
 		// Up
 		if(r < 6)
 		{
 			// Right
 			if(c < 7)
-			threatenCheck1Piece(board[r + 2][c + 1], king.owner, threats, KNIGHT, threatener);
+			threatenCheck1Piece(board[r + 2][c + 1], o, threats, KNIGHT, threatener);
 			// Left
 			if(c > 0)
-			threatenCheck1Piece(board[r + 2][c - 1], king.owner, threats, KNIGHT, threatener);
+			threatenCheck1Piece(board[r + 2][c - 1], o, threats, KNIGHT, threatener);
 		}
 		// Right
 		if(c < 6)
 		{
 			// Up
 			if(r < 7)
-			threatenCheck1Piece(board[r + 1][c + 2], king.owner, threats, KNIGHT, threatener);
+			threatenCheck1Piece(board[r + 1][c + 2], o, threats, KNIGHT, threatener);
 			// Down
 			if(r > 0)
-			threatenCheck1Piece(board[r - 1][c + 2], king.owner, threats, KNIGHT, threatener);
+			threatenCheck1Piece(board[r - 1][c + 2], o, threats, KNIGHT, threatener);
 		}
 		// Down
 		if(r > 1)
 		{
 			// Right
 			if(c < 7)
-			threatenCheck1Piece(board[r - 2][c + 1], king.owner, threats, KNIGHT, threatener);
+			threatenCheck1Piece(board[r - 2][c + 1], o, threats, KNIGHT, threatener);
 			// Left
 			if(c > 0)
-			threatenCheck1Piece(board[r - 2][c - 1], king.owner, threats, KNIGHT, threatener);
+			threatenCheck1Piece(board[r - 2][c - 1], o, threats, KNIGHT, threatener);
 		}
 		// Left
 		if(c > 1)
 		{
 			// Up
 			if(r < 7)
-			threatenCheck1Piece(board[r + 1][c - 2], king.owner, threats, KNIGHT, threatener);
+			threatenCheck1Piece(board[r + 1][c - 2], o, threats, KNIGHT, threatener);
 			// Down
 			if(r > 0)
-			threatenCheck1Piece(board[r - 1][c - 2], king.owner, threats, KNIGHT, threatener);
+			threatenCheck1Piece(board[r - 1][c - 2], o, threats, KNIGHT, threatener);
 		}
 
 		// Checking for pawns.
-		r = king.row;
 		if(whoseTurn == WHITE)
 		{
 			// No threat from pawns.
-			if(r == 7) goto SkipPawns;
-			r++;
+			if(row == 7) goto SkipPawns;
+			row++;
 		}
 		else
 		{
 			// No threat from pawns.
-			if(r == 0) goto SkipPawns;
-			r--;
+			if(row == 0) goto SkipPawns;
+			row--;
 		}
-		c = king.col;
 		// Right side
-		if(c < 7)
-		threatenCheck1Piece(board[r][c + 1], king.owner, threats, PAWN, threatener);
+		if(col < 7)
+		threatenCheck1Piece(board[row][col + 1], o, threats, PAWN, threatener);
 		// Left side
-		if(c > 0)
-		threatenCheck1Piece(board[r][c - 1], king.owner, threats, PAWN, threatener);
+		if(col > 0)
+		threatenCheck1Piece(board[row][col - 1], o, threats, PAWN, threatener);
 		SkipPawns:
 
 		// Useita uhkaajia.
@@ -557,6 +549,17 @@ private:
 		}
 	}
 
+	void canKingMove(Piece* p, list<Move> &m, Owner o, short fC, short fR, short tC, short tR)
+	{
+		if(p == NULL || p->owner != o)
+		{
+			// Uhataanko tätä ruutua?
+			Piece *threatener = NULL;
+			if(!isKingThreatened(o, tC, tR, threatener))
+			m.emplace_back(fC, fR, tC, tR);
+		}
+	}
+
 public:
 	short generateLegalMoves(list<Move> &moves)
 	{
@@ -583,16 +586,69 @@ public:
 		}
 
 		// Kuninkaan käsittely tähän
-		auto king = (*playersPieces).begin();
+		Piece *king = &(*(*playersPieces).begin());
 		Piece *threatener = NULL;
 
+		// Voiko kuningas liikkua?
+		{
+			// First up
+			short r = king->row + 1;
+			if(r < 8)
+			{
+				canKingMove(board[r][king->col], moves, whoseTurn, king->col, king->row, king->col, r);
+			}
+
+			// Then up-right
+			short c = king->col + 1;
+			if(r < 8 && c < 8)
+			{
+				canKingMove(board[r][c], moves, whoseTurn, king->col, king->row, c, r);
+			}
+
+			// Then right
+			if(c < 8)
+			{
+				canKingMove(board[king->row][c], moves, whoseTurn, king->col, king->row, c, king->row);
+			}
+
+			// Then right-down
+			r = king->row - 1;
+			if(r >= 0 && c < 8)
+			{
+				canKingMove(board[r][c], moves, whoseTurn, king->col, king->row, c, r);
+			}
+
+			// Then down
+			if(r >= 0)
+			{
+				canKingMove(board[r][king->col], moves, whoseTurn, king->col, king->row, king->col, r);
+			}
+
+			// Then down-left
+			c = king->col - 1;
+			if(r >= 0 && c >= 0)
+			{
+				canKingMove(board[r][c], moves, whoseTurn, king->col, king->row, c, r);
+			}
+
+			// Then left
+			if(c >= 0)
+			{
+				canKingMove(board[king->row][c], moves, whoseTurn, king->col, king->row, c, king->row);
+			}
+
+			// Then left-up
+			r = king->row + 1;
+			if(r < 8 && c >= 0)
+			{
+				canKingMove(board[r][c], moves, whoseTurn, king->col, king->row, c, r);
+			}
+		}
+
 		// Uhataanko?
-		if(isKingThreatened(*king, threatener))
+		if(isKingThreatened(king->owner, king->col, king->row, threatener))
 		{
 			cout << "Check!" << endl;
-
-			// Voiko kuningas liikkua?
-			// OMA FUNKTIO TÄLLE!
 
 			// Jos vain yksi vihollinen uhkaa, tarkista voiko laittaa eteen nappeja.
 			// Tämä on totta vain jos kuningasta uhataan.
@@ -639,9 +695,6 @@ public:
 			return moves.size();
 		}
 
-		// Voiko kuningas liikkua?
-		// OMA FUNKTIO TÄLLE!
-
 		// Sitten loput napit
 		for(auto p = (*playersPieces).begin()++; p != (*playersPieces).end(); p++)
 		{
@@ -668,7 +721,7 @@ public:
 					}
 
 					// Then right
-					for(short c = p->col + 1; c <= 7; c++)
+					for(short c = p->col + 1; c < 8; c++)
 					{
 						if(moveCheck(board[p->row][c], moves, whoseTurn, p->col, p->row, c, p->row))
 						{
@@ -677,7 +730,7 @@ public:
 					}
 
 					// Then right-down
-					for(short r = p->row - 1, c = p->col + 1; r >= 0 && c <8; r--, c++)
+					for(short r = p->row - 1, c = p->col + 1; r >= 0 && c < 8; r--, c++)
 					{
 						if(moveCheck(board[r][c], moves, whoseTurn, p->col, p->row, c, r))
 						{
@@ -734,7 +787,7 @@ public:
 					}
 
 					// Then right
-					for(short c = p->col + 1; c <= 7; c++)
+					for(short c = p->col + 1; c < 8; c++)
 					{
 						if(moveCheck(board[p->row][c], moves, whoseTurn, p->col, p->row, c, p->row))
 						{
