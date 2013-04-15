@@ -12,6 +12,7 @@ public:
 	// 3 = Double pawn move
 	// 4 = En Passant move
 	short special;
+	bool AI;
 
 	Move(){}
 	Move(short fC, short fR, short tC, short tR, short type = 0)
@@ -21,6 +22,7 @@ public:
 		toCol = tC;
 		toRow = tR;
 		special = type;
+		AI = true;
 	}
 	~Move(){}
 
@@ -31,6 +33,7 @@ public:
 		toCol = command[3] - 97;
 		toRow = command[4] - 49;
 		special = 0;
+		AI = false;
 	}
 	void setSpecial(char c)
 	{
@@ -1043,6 +1046,49 @@ public:
 		return moves.size();
 	}
 
+	void pawnPromotion(Piece* pawn, bool AI)
+	{
+		Who type;
+		if(AI)
+		{
+			type = QUEEN;
+		}
+		else
+		{
+			string cmd;
+			cout << "Give the promotion type [Q/N/R/B]" << endl;
+			getline(cin, cmd, '\n');
+			if(cmd.size() < 1) type = QUEEN;
+			switch(cmd[0])
+			{
+			case 'B':
+				type = BISHOP;
+				break;
+			case 'N':
+				type = KNIGHT;
+				break;
+			case 'Q':
+				type = QUEEN;
+				break;
+			case 'R':
+				type = ROOK;
+				break;
+			default:
+				type = QUEEN;
+				break;
+			}
+		}
+		list<Piece>* list = (pawn->owner == BLACK) ? &blackPieces : &whitePieces;
+		for(Piece &p: *list)
+		{
+			if(&p == pawn)
+			{
+				p.who = type;
+				return;
+			}
+		}
+	}
+
 	void executeMove(Move &m)
 	{
 		Piece* to = board[m.toRow][m.toCol];
@@ -1139,6 +1185,25 @@ public:
 				}
 			}
 		}
+
+		if(from->who == PAWN)
+		{
+			if(from->owner == WHITE)
+			{
+				if(from->row == R8)
+				{
+					pawnPromotion(from, m.AI);
+				}
+			}
+			else
+			{
+				if(from->row == R1)
+				{
+					pawnPromotion(from, m.AI);
+				}
+			}
+		}
+
 		// This clears the en passant possibilty.
 		passer = NULL;
 	}
