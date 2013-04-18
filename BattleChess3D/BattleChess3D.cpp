@@ -50,6 +50,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			cout << (char)(m.fromCol + 97) << (m.fromRow + 1) << "-" << (char)(m.toCol + 97) << (m.toRow + 1) << endl;
 		}
 		position->showSpecialInfo();
+		cout << "MinMax: " << position->evaluate() << endl;
 
 		moved = false;
 		while(true)

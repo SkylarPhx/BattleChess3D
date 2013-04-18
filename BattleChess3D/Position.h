@@ -1046,6 +1046,43 @@ public:
 		return moves.size();
 	}
 
+	float evaluate()
+	{
+		// Normal: 39, max: 103
+		short value[6] = {0, 9, 5, 3, 3, 1};
+		// Max: 52
+		short center[8][8] = {
+			{1, 1, 1, 1, 1, 1, 1, 1},
+			{1, 2, 2, 2, 2, 2, 2, 1},
+			{1, 2, 3, 3, 3, 3, 2, 1},
+			{1, 2, 3, 4, 4, 3, 2, 1},
+			{1, 2, 3, 4, 4, 3, 2, 1},
+			{1, 2, 3, 3, 3, 3, 2, 1},
+			{1, 2, 2, 2, 2, 2, 2, 1},
+			{1, 1, 1, 1, 1, 1, 1, 1}
+		};
+		// Max: 16
+		short promotion[2][8] = {
+			{0, 2, 2, 1, 1, 0, 0, 0}, // Black
+			{0, 0, 0, 1, 1, 2, 2, 0}  // White
+		};
+
+		short matValue = 0, mobValue = 0, pawnValue = 0;
+		for(Piece &p: whitePieces)
+		{
+			matValue += value[p.who];
+			mobValue += center[p.col][p.row];
+			pawnValue += promotion[p.owner][p.row];
+		}
+		for(Piece &p: blackPieces)
+		{
+			matValue -= value[p.who];
+			mobValue -= center[p.col][p.row];
+			pawnValue -= promotion[p.owner][p.row];
+		}
+		return 0.005f * (matValue + mobValue + pawnValue);
+	}
+
 	void pawnPromotion(Piece* pawn, bool AI)
 	{
 		Who type;
