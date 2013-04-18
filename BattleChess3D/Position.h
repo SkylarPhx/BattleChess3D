@@ -70,7 +70,10 @@ public:
 	void showSpecialInfo()
 	{
 		cout << "Castling bits: " << canCastle << endl;
-		cout << "En Passer: " << passer << endl;
+		cout << "En Passer: " << passer;
+		if(passer)
+			printColRow(passer->col, passer->row);
+		cout << endl;
 	}
 
 	Who whoIsOn(short col, short row)
@@ -1135,7 +1138,7 @@ public:
 			list<Piece>* list = (to->owner == BLACK) ? &blackPieces : &whitePieces;
 			for(auto i = list->end(); --i != list->begin();)
 			{
-				if(i->col == m.toCol && i->row == m.toRow)
+				if(&(*i) == to)
 				{
 					list->erase(i);
 					break;
@@ -1144,15 +1147,13 @@ public:
 		}
 
 		Piece* from = board[m.fromRow][m.fromCol];
-		if(from != NULL)
-		{
-			// Change the location of movable chess piece.
-			from->row = m.toRow;
-			from->col = m.toCol;
-		}
 		// Change pointers to chess pieces on the chess board.
 		board[m.toRow][m.toCol] = from;
 		board[m.fromRow][m.fromCol] = NULL;
+		if(from == NULL) return;
+		// Change the location of movable chess piece.
+		from->row = m.toRow;
+		from->col = m.toCol;
 
 		if(canCastle)
 		switch(from->who)
@@ -1209,15 +1210,15 @@ public:
 				passer = from;
 				return;
 			}
-			cout << "Deleting en passant... ";
+			cout << "Deleting en passant... in";
 			list<Piece>* list = (from->owner == WHITE) ? &blackPieces : &whitePieces;
 			for(auto i = list->end(); --i != list->begin();)
 			{
-				if(i->col == passer->col && i->row == passer->row)
+				if(&(*i) == passer)
 				{
 					board[passer->row][passer->col] = NULL;
 					list->erase(i);
-					cout << "done!" << endl;
+					cout << " done!" << endl;
 					break;
 				}
 			}

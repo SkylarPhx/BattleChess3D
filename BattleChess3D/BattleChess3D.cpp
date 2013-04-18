@@ -74,11 +74,11 @@ int _tmain(int argc, _TCHAR* argv[])
 			if(command[3] < 97 || command[3] > 104) continue;
 			if(command[4] < 49 || command[4] > 56) continue;
 			move.setMove(command);
-			if(command.size() > 6)
-			move.setSpecial(command[6]);
 
 			if(cheat)
 			{
+				if(command.size() > 6)
+				move.setSpecial(command[6]);
 				position->executeMove(move);
 				moved = true;
 			}
