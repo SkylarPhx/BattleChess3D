@@ -165,7 +165,7 @@ public:
 
 		whoseTurn = p.whoseTurn;
 		canCastle = p.canCastle;
-		passer = p.passer;
+		passer = (p.passer) ? board[p.passer->row][p.passer->col] : NULL;
 	}
 
 	void printColRow(short col, short row)
@@ -1210,7 +1210,7 @@ public:
 				passer = from;
 				return;
 			}
-			cout << "Deleting en passant... in";
+			cout << "Deleting en passant... ";
 			list<Piece>* list = (from->owner == WHITE) ? &blackPieces : &whitePieces;
 			for(auto i = list->end(); --i != list->begin();)
 			{
@@ -1218,7 +1218,7 @@ public:
 				{
 					board[passer->row][passer->col] = NULL;
 					list->erase(i);
-					cout << " done!" << endl;
+					cout << "done!" << endl;
 					break;
 				}
 			}
