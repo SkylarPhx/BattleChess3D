@@ -19,9 +19,10 @@ int _tmain(int argc, _TCHAR* argv[])
 		//int64_t duration = 0 - chrono::system_clock::to_time_t(chrono::system_clock::now());
 
 		// Deletes old position and copies its data to new position.
-		Position oldPosition(*position);
+		Position *oldPosition = new Position(*position);
 		delete position;
-		position = new Position(oldPosition);
+		position = new Position(*oldPosition);
+		delete oldPosition;
 		list<Move> moves;
 		cout << "Legal moves: " << position->generateLegalMoves(moves) << endl;
 		for(auto &m: moves)
