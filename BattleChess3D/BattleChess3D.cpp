@@ -23,9 +23,11 @@ int _tmain(int argc, _TCHAR* argv[])
 		delete position;
 		position = new Position(*oldPosition);
 		delete oldPosition;
+		position->tellTurn();
 		list<Move> moves;
 		cout << "Legal moves: " << position->generateLegalMoves(moves) << endl;
-		for(auto &m: moves)
+		if(moves.size() == 0) cout << "GAME ENDED!" << endl;
+		/*for(auto &m: moves)
 		{
 			switch(position->whoIsOn(m.fromCol, m.fromRow))
 			{
@@ -49,9 +51,10 @@ int _tmain(int argc, _TCHAR* argv[])
 				break;
 			}
 			cout << (char)(m.fromCol + 97) << (m.fromRow + 1) << "-" << (char)(m.toCol + 97) << (m.toRow + 1) << endl;
-		}
+		}*/
 		position->showSpecialInfo();
 		cout << "MinMax: " << position->evaluate() << endl;
+		position->selectBestMove(moves);
 
 		moved = false;
 		while(true)

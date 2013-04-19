@@ -3,6 +3,8 @@
 #include "ConsoleColor.h"
 using namespace std;
 
+mutex threadLock;
+
 class Move
 {
 public:
@@ -70,15 +72,26 @@ public:
 	void showSpecialInfo()
 	{
 		cout << "Castling bits: " << canCastle << endl;
-		cout << "En Passer: " << passer;
-		if(passer)
-			printColRow(passer->col, passer->row);
+		cout << "En Passer:";
+		if(passer) printColRow(passer->col, passer->row);
 		cout << endl;
 	}
 
 	Who whoIsOn(short col, short row)
 	{
 		return board[row][col]->who;
+	}
+
+	void tellTurn() const
+	{
+		if(whoseTurn == WHITE)
+		{
+			cout << redWhite << "\n*** White's Possible Moves ***" << greyBlack << endl;
+		}
+		else
+		{
+			cout << redBlack << "\n*** Black's Possible Moves ***" << greyBlack << endl;
+		}
 	}
 
 	// Removes all Pieces from the chess board.
@@ -645,13 +658,11 @@ public:
 		list<Piece> *playersPieces, *enemysPieces;
 		if(whoseTurn == WHITE)
 		{
-			cout << redWhite << "\n*** White's Possible Moves ***" << greyBlack << endl;
 			playersPieces = &whitePieces;
 			enemysPieces = &blackPieces;
 		}
 		else
 		{
-			cout << redBlack << "\n*** Black's Possible Moves ***" << greyBlack << endl;
 			playersPieces = &blackPieces;
 			enemysPieces = &whitePieces;
 		}
@@ -725,7 +736,8 @@ public:
 		// Uhataanko?
 		if(isKingThreatened(king->col, king->row, threatener))
 		{
-			cout << "Check!" << endl;
+			// Tee tää muulla tavalla!
+			//cout << "Check!" << endl;
 
 			// Jos vain yksi vihollinen uhkaa, tarkista voiko laittaa eteen nappeja.
 			// Tämä on totta vain jos kuningasta uhataan.
@@ -1049,7 +1061,7 @@ public:
 		return moves.size();
 	}
 
-	float evaluate()
+	short evaluate()
 	{
 		// Normal: 39, max: 103
 		short value[6] = {0, 9, 5, 3, 3, 1};
@@ -1083,9 +1095,94 @@ public:
 			mobValue -= center[p.col][p.row];
 			pawnValue -= promotion[p.owner][p.row];
 		}
-		return 0.005f * (matValue + mobValue + pawnValue);
+		return matValue + mobValue + pawnValue;
 	}
 
+private:
+	short negamax(Position *pos, short depth, short a, short b, short color) const
+	{
+		list<Move> moves;
+		if(pos->generateLegalMoves(moves) == 0)
+		{
+			// Peli päättynyt
+			return color * 10000;
+		}
+		if(depth == 0)
+		{
+			return color * pos->evaluate();
+		}
+		short value;
+		for(Move &m: moves)
+		{
+			Position *p = new Position(*pos);
+			p->executeMove(m);
+			p->changeTurn();
+			value = -negamax(p, depth - 1, -b, -a, -color);
+			//cout << value << " ";
+			delete p;
+			if(value >= b) return value;
+			if(value > a) a = value;
+		}
+		return a;
+	}
+
+	void minmax(Move m, multimap<short, Move> &values)
+	{
+		Position *p = new Position(*this);
+		p->executeMove(m);
+		p->changeTurn();
+		short value = negamax(p, 4, -30000, +30000, 1);
+		delete p;
+		threadLock.lock();
+		values.emplace(value, m);
+		threadLock.unlock();
+	}
+
+public:
+	multimap<short, Move> selectBestMove(list<Move> &moves)
+	{
+		cout << "AI negamax:" << endl;
+		list<thread> threads;
+		multimap<short, Move> values;
+		for(Move &m: moves)
+		{
+			threads.emplace_back(&Position::minmax, *this, m, ref(values));
+		}
+		for(thread &t: threads)
+		{
+			t.join();
+		}
+		for(auto i = values.begin(); i != values.end(); i++)
+		{
+			switch(board[i->second.fromRow][i->second.fromCol]->who)
+			{
+			case KING:
+				cout << "King ";
+				break;
+			case QUEEN:
+				cout << "Queen ";
+				break;
+			case ROOK:
+				cout << "Rook ";
+				break;
+			case BISHOP:
+				cout << "Bishop ";
+				break;
+			case KNIGHT:
+				cout << "Knight ";
+				break;
+			case PAWN:
+				cout << "Pawn ";
+				break;
+			}
+			cout << (char)(i->second.fromCol + 97) << (i->second.fromRow + 1) << "-";
+			cout << (char)(i->second.toCol + 97) << (i->second.toRow + 1);
+			cout << " : " << i->first << endl;
+		}
+		return values;
+	}
+
+private:
 	void pawnPromotion(Piece* pawn, bool AI)
 	{
 		Who type;
@@ -1129,6 +1226,7 @@ public:
 		}
 	}
 
+public:
 	void executeMove(Move &m)
 	{
 		Piece* to = board[m.toRow][m.toCol];
@@ -1206,11 +1304,11 @@ public:
 		{
 			if(m.special == 3)
 			{
-				cout << "En passant appeared!" << endl;
+				//cout << "En passant appeared!" << endl;
 				passer = from;
 				return;
 			}
-			cout << "Deleting en passant... ";
+			//cout << "Deleting en passant... ";
 			list<Piece>* list = (from->owner == WHITE) ? &blackPieces : &whitePieces;
 			for(auto i = list->end(); --i != list->begin();)
 			{
@@ -1218,7 +1316,7 @@ public:
 				{
 					board[passer->row][passer->col] = NULL;
 					list->erase(i);
-					cout << "done!" << endl;
+					//cout << "done!" << endl;
 					break;
 				}
 			}

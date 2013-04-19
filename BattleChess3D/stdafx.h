@@ -15,12 +15,11 @@
 // TODO: reference additional headers your program requires here
 
 #include <array>
-//#include <atomic>
 #include <chrono>
 #include <iostream>
 #include <list>
-//#include <vector>
-//#include <mutex>
+#include <map>
+#include <mutex>
 #include <string>
 #include <thread>
 
