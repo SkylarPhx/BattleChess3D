@@ -43,6 +43,11 @@ public:
 	}
 };
 
+void printMove(const Move &m)
+{
+	cout << (char)(m.fromCol + 97) << (m.fromRow + 1) << "-" << (char)(m.toCol + 97) << (m.toRow + 1) << endl;
+}
+
 class Position
 {
 private:
@@ -82,7 +87,7 @@ public:
 		return board[row][col]->who;
 	}
 
-	void tellTurn() const
+	Owner tellTurn() const
 	{
 		if(whoseTurn == WHITE)
 		{
@@ -92,6 +97,7 @@ public:
 		{
 			cout << redBlack << "\n*** Black's Possible Moves ***" << greyBlack << endl;
 		}
+		return whoseTurn;
 	}
 
 	// Removes all Pieces from the chess board.
@@ -450,7 +456,7 @@ private:
 		// Useita uhkaajia.
 		// Siispä ei ole mahdollista laittaa eteen mitään.
 		if(threats > 1) threatener = NULL;
-		return threats;
+		return threats != 0;
 	}
 
 	void checkOwnMovesToHere(list<Move> &m, short tC, short tR)
@@ -645,7 +651,7 @@ private:
 	}
 
 public:
-	short generateLegalMoves(list<Move> &moves)
+	short generateLegalMoves(list<Move> &moves, short &adjValue)
 	{
 		// • Käydään läpi vuorossa olevan pelaajan nappulat.
 		// • Ensimmäisenä on aina kuningas.
@@ -676,57 +682,53 @@ public:
 			// "Remove" the king from the board to have proper checks.
 			board[king->row][king->col] = NULL;
 
-			// First up
-			short r = king->row + 1;
+			short r = king->row + 1, c = king->col + 1;
 			if(r < 8)
 			{
+				// First up
 				canKingMove(board[r][king->col], moves, king->col, king->row, king->col, r);
+				if(c < 8)
+				{
+					// Then up-right
+					canKingMove(board[r][c], moves, king->col, king->row, c, r);
+				}
 			}
 
-			// Then up-right
-			short c = king->col + 1;
-			if(r < 8 && c < 8)
-			{
-				canKingMove(board[r][c], moves, king->col, king->row, c, r);
-			}
-
-			// Then right
+			r = king->row - 1;
 			if(c < 8)
 			{
+				// Then right
 				canKingMove(board[king->row][c], moves, king->col, king->row, c, king->row);
+				if(r >= 0)
+				{
+
+					// Then right-down
+					canKingMove(board[r][c], moves, king->col, king->row, c, r);
+				}
 			}
 
-			// Then right-down
-			r = king->row - 1;
-			if(r >= 0 && c < 8)
-			{
-				canKingMove(board[r][c], moves, king->col, king->row, c, r);
-			}
-
-			// Then down
+			c = king->col - 1;
 			if(r >= 0)
 			{
+				// Then down
 				canKingMove(board[r][king->col], moves, king->col, king->row, king->col, r);
+				if(c >= 0)
+				{
+					// Then down-left
+					canKingMove(board[r][c], moves, king->col, king->row, c, r);
+				}
 			}
 
-			// Then down-left
-			c = king->col - 1;
-			if(r >= 0 && c >= 0)
-			{
-				canKingMove(board[r][c], moves, king->col, king->row, c, r);
-			}
-
-			// Then left
 			if(c >= 0)
 			{
+				// Then left
 				canKingMove(board[king->row][c], moves, king->col, king->row, c, king->row);
-			}
-
-			// Then left-up
-			r = king->row + 1;
-			if(r < 8 && c >= 0)
-			{
-				canKingMove(board[r][c], moves, king->col, king->row, c, r);
+				r = king->row + 1;
+				if(r < 8)
+				{
+					// Then left-up
+					canKingMove(board[r][c], moves, king->col, king->row, c, r);
+				}
 			}
 
 			// Restore the king to the board.
@@ -736,8 +738,8 @@ public:
 		// Uhataanko?
 		if(isKingThreatened(king->col, king->row, threatener))
 		{
-			// Tee tää muulla tavalla!
 			//cout << "Check!" << endl;
+			adjValue = (whoseTurn == WHITE) ? -1000 : 1000;
 
 			// Jos vain yksi vihollinen uhkaa, tarkista voiko laittaa eteen nappeja.
 			// Tämä on totta vain jos kuningasta uhataan.
@@ -781,6 +783,7 @@ public:
 			}
 
 			// Muita nappeja ei voi siirtää muualle!
+			if(moves.empty()) adjValue = (whoseTurn == WHITE) ? 0xBC18 : 0x43E8;
 			return moves.size();
 		}
 
@@ -1058,28 +1061,29 @@ public:
 			}
 		}
 
+		if(moves.empty()) adjValue = (whoseTurn == WHITE) ? 0xC000 : 0x4000;
 		return moves.size();
 	}
 
 	short evaluate()
 	{
-		// Normal: 39, max: 103
-		short value[6] = {0, 9, 5, 3, 3, 1};
-		// Max: 52
+		// Normal: 78, max: 206
+		short value[6] = {0, 18, 10, 6, 6, 2};
+		// Max: 48
 		short center[8][8] = {
 			{1, 1, 1, 1, 1, 1, 1, 1},
 			{1, 2, 2, 2, 2, 2, 2, 1},
 			{1, 2, 3, 3, 3, 3, 2, 1},
-			{1, 2, 3, 4, 4, 3, 2, 1},
-			{1, 2, 3, 4, 4, 3, 2, 1},
+			{1, 2, 3, 3, 3, 3, 2, 1},
+			{1, 2, 3, 3, 3, 3, 2, 1},
 			{1, 2, 3, 3, 3, 3, 2, 1},
 			{1, 2, 2, 2, 2, 2, 2, 1},
 			{1, 1, 1, 1, 1, 1, 1, 1}
 		};
-		// Max: 16
+		// Max: 32
 		short promotion[2][8] = {
-			{0, 2, 2, 1, 1, 0, 0, 0}, // Black
-			{0, 0, 0, 1, 1, 2, 2, 0}  // White
+			{0, 4, 3, 2, 2, 1, 0, 0}, // Black
+			{0, 0, 1, 2, 2, 3, 4, 0}  // White
 		};
 
 		short matValue = 0, mobValue = 0, pawnValue = 0;
@@ -1095,43 +1099,47 @@ public:
 			mobValue -= center[p.col][p.row];
 			pawnValue -= promotion[p.owner][p.row];
 		}
-		return matValue + mobValue + pawnValue;
+		return matValue + pawnValue + mobValue;
 	}
 
 private:
 	short negamax(Position *pos, short depth, short a, short b, short color) const
 	{
 		list<Move> moves;
-		if(pos->generateLegalMoves(moves) == 0)
+		short adjValue = 0;
+		if(pos->generateLegalMoves(moves, adjValue) == 0)
 		{
 			// Peli päättynyt
-			return color * 10000;
+			return color * adjValue;
 		}
 		if(depth == 0)
 		{
-			return color * pos->evaluate();
+			return color * (pos->evaluate() + adjValue);
 		}
-		short value;
+		short max = -30000;
 		for(Move &m: moves)
 		{
 			Position *p = new Position(*pos);
 			p->executeMove(m);
 			p->changeTurn();
-			value = -negamax(p, depth - 1, -b, -a, -color);
-			//cout << value << " ";
+			short value = -negamax(p, depth - 1, -b, -a, -color);
 			delete p;
-			if(value >= b) return value;
-			if(value > a) a = value;
+			if(value > max) max = value;
+			if(max > a) a = max;
+			if(a >= b) return a;
 		}
-		return a;
+		return max;
 	}
 
-	void minmax(Move m, multimap<short, Move> &values)
+	void minmax(Move m, multimap<short, Move> &values, short color)
 	{
 		Position *p = new Position(*this);
 		p->executeMove(m);
 		p->changeTurn();
-		short value = negamax(p, 4, -30000, +30000, 1);
+		// Debug: 4 max
+		// Release: 5-6
+		// Suurenna kun napit vähenee runsaasti?
+		short value = color * negamax(p, 5, -30000, 30000, color);
 		delete p;
 		threadLock.lock();
 		values.emplace(value, m);
@@ -1139,14 +1147,16 @@ private:
 	}
 
 public:
-	multimap<short, Move> selectBestMove(list<Move> &moves)
+	Move selectBestMove(list<Move> &moves)
 	{
 		cout << "AI negamax:" << endl;
 		list<thread> threads;
 		multimap<short, Move> values;
+		auto time1 = chrono::system_clock::to_time_t(chrono::system_clock::now());
+		short color = (whoseTurn == WHITE) ? -1 : 1;
 		for(Move &m: moves)
 		{
-			threads.emplace_back(&Position::minmax, *this, m, ref(values));
+			threads.emplace_back(&Position::minmax, *this, m, ref(values), color);
 		}
 		for(thread &t: threads)
 		{
@@ -1156,30 +1166,20 @@ public:
 		{
 			switch(board[i->second.fromRow][i->second.fromCol]->who)
 			{
-			case KING:
-				cout << "King ";
-				break;
-			case QUEEN:
-				cout << "Queen ";
-				break;
-			case ROOK:
-				cout << "Rook ";
-				break;
-			case BISHOP:
-				cout << "Bishop ";
-				break;
-			case KNIGHT:
-				cout << "Knight ";
-				break;
-			case PAWN:
-				cout << "Pawn ";
-				break;
+			case KING: cout << "King "; break;
+			case QUEEN: cout << "Queen "; break;
+			case ROOK: cout << "Rook "; break;
+			case BISHOP: cout << "Bishop "; break;
+			case KNIGHT: cout << "Knight "; break;
+			case PAWN: cout << "Pawn "; break;
 			}
 			cout << (char)(i->second.fromCol + 97) << (i->second.fromRow + 1) << "-";
 			cout << (char)(i->second.toCol + 97) << (i->second.toRow + 1);
 			cout << " : " << i->first << endl;
 		}
-		return values;
+		auto time2 = chrono::system_clock::to_time_t(chrono::system_clock::now());
+		cout << "Time elapsed: " << (time2 - time1) << " s" << endl;
+		return (whoseTurn == WHITE) ? values.rbegin()->second : values.begin()->second;
 	}
 
 private:
@@ -1198,21 +1198,11 @@ private:
 			if(cmd.size() < 1) type = QUEEN;
 			switch(cmd[0])
 			{
-			case 'B':
-				type = BISHOP;
-				break;
-			case 'N':
-				type = KNIGHT;
-				break;
-			case 'Q':
-				type = QUEEN;
-				break;
-			case 'R':
-				type = ROOK;
-				break;
-			default:
-				type = QUEEN;
-				break;
+			case 'B': type = BISHOP; break;
+			case 'N': type = KNIGHT; break;
+			case 'Q': type = QUEEN; break;
+			case 'R': type = ROOK; break;
+			default: type = QUEEN; break;
 			}
 		}
 		list<Piece>* list = (pawn->owner == BLACK) ? &blackPieces : &whitePieces;

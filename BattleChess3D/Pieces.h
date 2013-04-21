@@ -42,24 +42,12 @@ public:
 	{
 		switch(who)
 		{
-		case KING:
-			cout << "K";
-			break;
-		case QUEEN:
-			cout << "Q";
-			break;
-		case ROOK:
-			cout << "R";
-			break;
-		case BISHOP:
-			cout << "B";
-			break;
-		case KNIGHT:
-			cout << "N";
-			break;
-		case PAWN:
-			cout << "P";
-			break;
+		case KING: cout << "K"; break;
+		case QUEEN: cout << "Q"; break;
+		case ROOK: cout << "R"; break;
+		case BISHOP: cout << "B"; break;
+		case KNIGHT: cout << "N"; break;
+		case PAWN: cout << "P"; break;
 		}
 	};
 };
