@@ -7,9 +7,9 @@ using namespace std;
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	Position *position = new Position();
-	position->start();
-	position->showPosition();
+	Position position;
+	position.start();
+	position.showPosition();
 	Move move;
 	bool cheat = false, moved;
 
@@ -17,14 +17,12 @@ int _tmain(int argc, _TCHAR* argv[])
 	while(1)
 	{
 		// Deletes old position and copies its data to new position.
-		Position *oldPosition = new Position(*position);
-		delete position;
-		position = new Position(*oldPosition);
-		delete oldPosition;
-		Owner turn = position->tellTurn();
+		Position oldPosition(position);
+		position.copyPosition(oldPosition);
+		Owner turn = position.tellTurn();
 		list<Move> moves;
 		short adjValue = 0;
-		cout << "Legal moves: " << position->generateLegalMoves(moves, adjValue) << endl;
+		cout << "Legal moves: " << position.generateLegalMoves(moves, adjValue) << endl;
 		if((signed char)adjValue) cout << "Check!" << endl;
 		if(moves.empty())
 		{
@@ -44,13 +42,13 @@ int _tmain(int argc, _TCHAR* argv[])
 			}
 			printMove(m);
 		}*/
-		position->showSpecialInfo();
-		cout << "Evaluation: " << position->evaluate() << endl;
-		Move bestMove = position->selectBestMove(moves);
+		position.showSpecialInfo();
+		cout << "Evaluation: " << position.evaluate() << endl;
 		if(turn == BLACK)
 		{
+			Move bestMove = position.selectBestMove(moves);
 			printMove(bestMove);
-			position->executeMove(bestMove);
+			position.executeMove(bestMove);
 			moved = true;
 		}
 		else moved = false;
@@ -81,7 +79,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			{
 				if(command.size() > 6)
 				move.setSpecial(command[6]);
-				position->executeMove(move);
+				position.executeMove(move);
 				moved = true;
 			}
 			else
@@ -96,7 +94,7 @@ int _tmain(int argc, _TCHAR* argv[])
 					{
 						legal = true;
 						m.AI = false;
-						position->executeMove(m);
+						position.executeMove(m);
 						moved = true;
 						break;
 					}
@@ -109,10 +107,10 @@ int _tmain(int argc, _TCHAR* argv[])
 			break;
 		}
 
-		position->showPosition();
+		position.showPosition();
 
 		// Turn changes.
-		if(moved) position->changeTurn();
+		if(moved) position.changeTurn();
 	}
 	return 0;
 }

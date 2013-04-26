@@ -817,6 +817,20 @@ public:
 		// Sitten loput napit
 		for(auto p = (*playersPieces).begin()++; p != (*playersPieces).end(); p++)
 		{
+			// Jokaisesta napista pitää tarkistaa, onko se estämässä shakkia!
+			// "Nosta" nappi pois ja katso tuleeko shakkia siitä suunnasta.
+			board[p->row][p->col] = NULL;
+			if(isKingThreatened(king->col, king->row, threatener))
+			{
+				board[p->row][p->col] = &(*p);
+				// Tätä nappia ei voi siirtää minnekään, koska se suojaa kuningasta.
+				continue;
+			}
+			else
+			{
+				board[p->row][p->col] = &(*p);
+			}
+
 			switch(p->who)
 			{
 			case QUEEN:
@@ -1061,12 +1075,15 @@ public:
 			}
 		}
 
-		if(moves.empty()) adjValue = (whoseTurn == WHITE) ? 0xC000 : 0x4000;
+		//if(moves.empty()) adjValue = (whoseTurn == WHITE) ? 0xC000 : 0x4000;
 		return moves.size();
 	}
 
 	short evaluate()
 	{
+		short c1 = 10, c2 = 5, c3 = 0; // c3, pieni kerroin
+		// c4: mobiliteetti (laillisten siirtojen lkm siirtovuoroiselle pelaajalle)
+
 		// Normal: 78, max: 206
 		short value[6] = {0, 18, 10, 6, 6, 2};
 		// Max: 48
@@ -1082,48 +1099,51 @@ public:
 		};
 		// Max: 32
 		short promotion[2][8] = {
-			{0, 4, 3, 2, 2, 1, 0, 0}, // Black
-			{0, 0, 1, 2, 2, 3, 4, 0}  // White
+			{0, 3, 1, 0, 0, 0, 0, 0}, // Black
+			{0, 0, 0, 0, 0, 1, 3, 0}  // White
 		};
 
 		short matValue = 0, mobValue = 0, pawnValue = 0;
 		for(Piece &p: whitePieces)
 		{
 			matValue += value[p.who];
-			mobValue += center[p.col][p.row];
-			pawnValue += promotion[p.owner][p.row];
+			if(p.who == PAWN)
+				pawnValue += promotion[p.owner][p.row]; // vain sotilaille!
+			else
+				mobValue += center[p.col][p.row]; // liian korkea kerroin tällä hetkellä
 		}
 		for(Piece &p: blackPieces)
 		{
 			matValue -= value[p.who];
-			mobValue -= center[p.col][p.row];
-			pawnValue -= promotion[p.owner][p.row];
+			if(p.who == PAWN)
+				pawnValue -= promotion[p.owner][p.row];
+			else
+				mobValue -= center[p.col][p.row];
 		}
-		return matValue + pawnValue + mobValue;
+		return c1 * matValue + c2 * mobValue + c3 * pawnValue;
 	}
 
 private:
-	short negamax(Position *pos, short depth, short a, short b, short color) const
+	short negamax(Position &pos, short depth, short a, short b, short color) const
 	{
 		list<Move> moves;
-		short adjValue = 0;
-		if(pos->generateLegalMoves(moves, adjValue) == 0)
+		short result = 0;
+		if(pos.generateLegalMoves(moves, result) == 0)
 		{
 			// Peli päättynyt
-			return color * adjValue;
+			return color * result;
 		}
 		if(depth == 0)
 		{
-			return color * (pos->evaluate() + adjValue);
+			return color * (pos.evaluate());
 		}
 		short max = -30000;
 		for(Move &m: moves)
 		{
-			Position *p = new Position(*pos);
-			p->executeMove(m);
-			p->changeTurn();
+			Position p(pos);
+			p.executeMove(m);
+			p.changeTurn();
 			short value = -negamax(p, depth - 1, -b, -a, -color);
-			delete p;
 			if(value > max) max = value;
 			if(max > a) a = max;
 			if(a >= b) return a;
@@ -1133,14 +1153,13 @@ private:
 
 	void minmax(Move m, multimap<short, Move> &values, short color)
 	{
-		Position *p = new Position(*this);
-		p->executeMove(m);
-		p->changeTurn();
+		Position p(*this);
+		p.executeMove(m);
+		p.changeTurn();
 		// Debug: 4 max
 		// Release: 5-6
 		// Suurenna kun napit vähenee runsaasti?
 		short value = color * negamax(p, 5, -30000, 30000, color);
-		delete p;
 		threadLock.lock();
 		values.emplace(value, m);
 		threadLock.unlock();
