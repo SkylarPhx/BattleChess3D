@@ -255,6 +255,23 @@ private:
 		return true;
 	}
 
+	bool threatenCheck(Piece* p, short &threats, Who secondPieceType)
+	{
+		// No piece, no threat.
+		// Continue checking.
+		if(p == NULL) return false;
+		// Our piece, no threat.
+		// Stop checking.
+		if(p->owner == whoseTurn) return true;
+		// Is it queen or rook/bishop = is the king threatened?
+		if(p->who == QUEEN || p->who == secondPieceType)
+		{
+			threats++;
+		}
+		// Stop checking.
+		return true;
+	}
+
 	void threatenCheck1Piece(Piece* p, short &threats, Who pieceType, Piece* &t)
 	{
 		// No piece, no threat.
@@ -325,68 +342,44 @@ private:
 		// Up
 		for(short r = row + 1; r < 8; r++)
 		{
-			if(threatenCheck(board[r][col], threats, ROOK, threatener))
-			{
-				break;
-			}
+			if(threatenCheck(board[r][col], threats, ROOK, threatener)) break;
 		}
 		// Right
 		for(short c = col + 1; c < 8; c++)
 		{
-			if(threatenCheck(board[row][c], threats, ROOK, threatener))
-			{
-				break;
-			}
+			if(threatenCheck(board[row][c], threats, ROOK, threatener)) break;
 		}
 		// Down
 		for(short r = row - 1; r >= 0; r--)
 		{
-			if(threatenCheck(board[r][col], threats, ROOK, threatener))
-			{
-				break;
-			}
+			if(threatenCheck(board[r][col], threats, ROOK, threatener)) break;
 		}
 		// Left
 		for(short c = col - 1; c >= 0; c--)
 		{
-			if(threatenCheck(board[row][c], threats, ROOK, threatener))
-			{
-				break;
-			}
+			if(threatenCheck(board[row][c], threats, ROOK, threatener)) break;
 		}
 
 		// Sideways: queens, bishops
 		// Up-right
 		for(short r = row + 1, c = col + 1; r < 8 && c < 8; r++, c++)
 		{
-			if(threatenCheck(board[r][c], threats, BISHOP, threatener))
-			{
-				break;
-			}
+			if(threatenCheck(board[r][c], threats, BISHOP, threatener)) break;
 		}
 		// Right-down
 		for(short r = row - 1, c = col + 1; r >= 0 && c < 8; r--, c++)
 		{
-			if(threatenCheck(board[r][c], threats, BISHOP, threatener))
-			{
-				break;
-			}
+			if(threatenCheck(board[r][c], threats, BISHOP, threatener)) break;
 		}
 		// Down-left
 		for(short r = row - 1, c = col - 1; r >= 0 && c >= 0; r--, c--)
 		{
-			if(threatenCheck(board[r][c], threats, BISHOP, threatener))
-			{
-				break;
-			}
+			if(threatenCheck(board[r][c], threats, BISHOP, threatener)) break;
 		}
 		// Left-up
 		for(short r = row + 1, c = col - 1; r < 8 && c >= 0; r++, c--)
 		{
-			if(threatenCheck(board[r][c], threats, BISHOP, threatener))
-			{
-				break;
-			}
+			if(threatenCheck(board[r][c], threats, BISHOP, threatener)) break;
 		}
 
 		// Checking for knights
@@ -458,6 +451,59 @@ private:
 		if(threats > 1) threatener = NULL;
 		return threats != 0;
 	}
+	
+	// Onko kuningasta suojaavan napin takana uhka?
+	bool isKingThreatened(short col, short row)
+	{
+		// Uhkien määrä (tarvitaan myöhemmin)
+		short threats = 0;
+
+		// Up/Down/Left/Right: queens, rooks
+		// Up
+		for(short r = row + 1; r < 8; r++)
+		{
+			if(threatenCheck(board[r][col], threats, ROOK)) break;
+		}
+		// Right
+		for(short c = col + 1; c < 8; c++)
+		{
+			if(threatenCheck(board[row][c], threats, ROOK)) break;
+		}
+		// Down
+		for(short r = row - 1; r >= 0; r--)
+		{
+			if(threatenCheck(board[r][col], threats, ROOK)) break;
+		}
+		// Left
+		for(short c = col - 1; c >= 0; c--)
+		{
+			if(threatenCheck(board[row][c], threats, ROOK)) break;
+		}
+
+		// Sideways: queens, bishops
+		// Up-right
+		for(short r = row + 1, c = col + 1; r < 8 && c < 8; r++, c++)
+		{
+			if(threatenCheck(board[r][c], threats, BISHOP)) break;
+		}
+		// Right-down
+		for(short r = row - 1, c = col + 1; r >= 0 && c < 8; r--, c++)
+		{
+			if(threatenCheck(board[r][c], threats, BISHOP)) break;
+		}
+		// Down-left
+		for(short r = row - 1, c = col - 1; r >= 0 && c >= 0; r--, c--)
+		{
+			if(threatenCheck(board[r][c], threats, BISHOP)) break;
+		}
+		// Left-up
+		for(short r = row + 1, c = col - 1; r < 8 && c >= 0; r++, c--)
+		{
+			if(threatenCheck(board[r][c], threats, BISHOP)) break;
+		}
+
+		return threats != 0;
+	}
 
 	void checkOwnMovesToHere(list<Move> &m, short tC, short tR)
 	{
@@ -468,68 +514,44 @@ private:
 		// Up
 		for(short r = tR + 1; r < 8; r++)
 		{
-			if(canMoveOwn(board[r][tC], m, ROOK, tC, tR))
-			{
-				break;
-			}
+			if(canMoveOwn(board[r][tC], m, ROOK, tC, tR)) break;
 		}
 		// Right
 		for(short c = tC + 1; c < 8; c++)
 		{
-			if(canMoveOwn(board[tR][c], m, ROOK, tC, tR))
-			{
-				break;
-			}
+			if(canMoveOwn(board[tR][c], m, ROOK, tC, tR)) break;
 		}
 		// Down
 		for(short r = tR - 1; r >= 0; r--)
 		{
-			if(canMoveOwn(board[r][tC], m, ROOK, tC, tR))
-			{
-				break;
-			}
+			if(canMoveOwn(board[r][tC], m, ROOK, tC, tR)) break;
 		}
 		// Left
 		for(short c = tC - 1; c >= 0; c--)
 		{
-			if(canMoveOwn(board[tR][c], m, ROOK, tC, tR))
-			{
-				break;
-			}
+			if(canMoveOwn(board[tR][c], m, ROOK, tC, tR)) break;
 		}
 
 		// Sideways: queens, bishops
 		// Up-right
 		for(short r = tR + 1, c = tC + 1; r < 8 && c < 8; r++, c++)
 		{
-			if(canMoveOwn(board[r][c], m, BISHOP, tC, tR))
-			{
-				break;
-			}
+			if(canMoveOwn(board[r][c], m, BISHOP, tC, tR)) break;
 		}
 		// Right-down
 		for(short r = tR - 1, c = tC + 1; r >= 0 && c < 8; r--, c++)
 		{
-			if(canMoveOwn(board[r][c], m, BISHOP, tC, tR))
-			{
-				break;
-			}
+			if(canMoveOwn(board[r][c], m, BISHOP, tC, tR)) break;
 		}
 		// Down-left
 		for(short r = tR - 1, c = tC - 1; r >= 0 && c >= 0; r--, c--)
 		{
-			if(canMoveOwn(board[r][c], m, BISHOP, tC, tR))
-			{
-				break;
-			}
+			if(canMoveOwn(board[r][c], m, BISHOP, tC, tR)) break;
 		}
 		// Left-up
 		for(short r = tR + 1, c = tC - 1; r < 8 && c >= 0; r++, c--)
 		{
-			if(canMoveOwn(board[r][c], m, BISHOP, tC, tR))
-			{
-				break;
-			}
+			if(canMoveOwn(board[r][c], m, BISHOP, tC, tR)) break;
 		}
 
 		// Checking for knights
@@ -651,7 +673,7 @@ private:
 	}
 
 public:
-	short generateLegalMoves(list<Move> &moves, short &adjValue)
+	short generateLegalMoves(list<Move> &moves, short &result)
 	{
 		// • Käydään läpi vuorossa olevan pelaajan nappulat.
 		// • Ensimmäisenä on aina kuningas.
@@ -739,7 +761,7 @@ public:
 		if(isKingThreatened(king->col, king->row, threatener))
 		{
 			//cout << "Check!" << endl;
-			adjValue = (whoseTurn == WHITE) ? -1000 : 1000;
+			result = (whoseTurn == WHITE) ? -1000 : 1000;
 
 			// Jos vain yksi vihollinen uhkaa, tarkista voiko laittaa eteen nappeja.
 			// Tämä on totta vain jos kuningasta uhataan.
@@ -783,7 +805,7 @@ public:
 			}
 
 			// Muita nappeja ei voi siirtää muualle!
-			if(moves.empty()) adjValue = (whoseTurn == WHITE) ? 0xBC18 : 0x43E8;
+			if(moves.empty()) result = (whoseTurn == WHITE) ? 0xBC18 : 0x43E8;
 			return moves.size();
 		}
 
@@ -820,7 +842,9 @@ public:
 			// Jokaisesta napista pitää tarkistaa, onko se estämässä shakkia!
 			// "Nosta" nappi pois ja katso tuleeko shakkia siitä suunnasta.
 			board[p->row][p->col] = NULL;
-			if(isKingThreatened(king->col, king->row, threatener))
+			// Tutki missä suunnassa kuningas on tästä napista katsottuna.
+			// Sitten tutki kuninkaasta
+			if(isKingThreatened(king->col, king->row))
 			{
 				board[p->row][p->col] = &(*p);
 				// Tätä nappia ei voi siirtää minnekään, koska se suojaa kuningasta.
@@ -1075,14 +1099,13 @@ public:
 			}
 		}
 
-		//if(moves.empty()) adjValue = (whoseTurn == WHITE) ? 0xC000 : 0x4000;
+		//if(moves.empty()) result = (whoseTurn == WHITE) ? 0xC000 : 0x4000;
 		return moves.size();
 	}
 
-	short evaluate()
+	short evaluate(short moveCount)
 	{
-		short c1 = 10, c2 = 5, c3 = 0; // c3, pieni kerroin
-		// c4: mobiliteetti (laillisten siirtojen lkm siirtovuoroiselle pelaajalle)
+		short c1 = 10, c2 = 5, c3 = 1, c4 = 1; // mobiliteetti (laillisten siirtojen lkm siirtovuoroiselle pelaajalle)
 
 		// Normal: 78, max: 206
 		short value[6] = {0, 18, 10, 6, 6, 2};
@@ -1104,38 +1127,38 @@ public:
 		};
 
 		short matValue = 0, mobValue = 0, pawnValue = 0;
-		for(Piece &p: whitePieces)
+		for(auto i = whitePieces.begin()++; i != whitePieces.end(); i++)
 		{
-			matValue += value[p.who];
-			if(p.who == PAWN)
-				pawnValue += promotion[p.owner][p.row]; // vain sotilaille!
+			matValue += value[i->who];
+			if(i->who == PAWN)
+				pawnValue += promotion[i->owner][i->row]; // vain sotilaille!
 			else
-				mobValue += center[p.col][p.row]; // liian korkea kerroin tällä hetkellä
+				mobValue += center[i->col][i->row]; // liian korkea kerroin tällä hetkellä
 		}
-		for(Piece &p: blackPieces)
+		for(auto i = blackPieces.begin()++; i != blackPieces.end(); i++)
 		{
-			matValue -= value[p.who];
-			if(p.who == PAWN)
-				pawnValue -= promotion[p.owner][p.row];
+			matValue -= value[i->who];
+			if(i->who == PAWN)
+				pawnValue -= promotion[i->owner][i->row];
 			else
-				mobValue -= center[p.col][p.row];
+				mobValue -= center[i->col][i->row];
 		}
-		return c1 * matValue + c2 * mobValue + c3 * pawnValue;
+		return c1 * matValue + c2 * mobValue + c3 * pawnValue + c4 * moveCount;
 	}
 
 private:
 	short negamax(Position &pos, short depth, short a, short b, short color) const
 	{
 		list<Move> moves;
-		short result = 0;
-		if(pos.generateLegalMoves(moves, result) == 0)
+		short result = 0, moveCount = pos.generateLegalMoves(moves, result);
+		if(moveCount == 0)
 		{
 			// Peli päättynyt
 			return color * result;
 		}
 		if(depth == 0)
 		{
-			return color * (pos.evaluate());
+			return color * pos.evaluate(color * moveCount);
 		}
 		short max = -30000;
 		for(Move &m: moves)
@@ -1159,7 +1182,7 @@ private:
 		// Debug: 4 max
 		// Release: 5-6
 		// Suurenna kun napit vähenee runsaasti?
-		short value = color * negamax(p, 5, -30000, 30000, color);
+		short value = color * negamax(p, 3, -30000, 30000, color);
 		threadLock.lock();
 		values.emplace(value, m);
 		threadLock.unlock();

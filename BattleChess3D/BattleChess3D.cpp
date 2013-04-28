@@ -21,9 +21,9 @@ int _tmain(int argc, _TCHAR* argv[])
 		position.copyPosition(oldPosition);
 		Owner turn = position.tellTurn();
 		list<Move> moves;
-		short adjValue = 0;
-		cout << "Legal moves: " << position.generateLegalMoves(moves, adjValue) << endl;
-		if((signed char)adjValue) cout << "Check!" << endl;
+		short result = 0;
+		cout << "Legal moves: " << position.generateLegalMoves(moves, result) << endl;
+		if((signed char)result) cout << "Check!" << endl;
 		if(moves.empty())
 		{
 			cout << "GAME ENDED!" << endl;
@@ -43,10 +43,10 @@ int _tmain(int argc, _TCHAR* argv[])
 			printMove(m);
 		}*/
 		position.showSpecialInfo();
-		cout << "Evaluation: " << position.evaluate() << endl;
+		cout << "Evaluation: " << position.evaluate(0) << endl;
+		Move bestMove = position.selectBestMove(moves);
 		if(turn == BLACK)
 		{
-			Move bestMove = position.selectBestMove(moves);
 			printMove(bestMove);
 			position.executeMove(bestMove);
 			moved = true;
