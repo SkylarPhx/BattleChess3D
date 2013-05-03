@@ -48,6 +48,11 @@ void printMove(const Move &m)
 	cout << (char)(m.fromCol + 97) << (m.fromRow + 1) << "-" << (char)(m.toCol + 97) << (m.toRow + 1) << endl;
 }
 
+enum Direction
+{
+	NOWHERE, NORTH, NORTHEAST, EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST, NORTHWEST
+};
+
 class Position
 {
 private:
@@ -255,7 +260,7 @@ private:
 		return true;
 	}
 
-	bool threatenCheck(Piece* p, short &threats, Who secondPieceType)
+	/*bool threatenCheck(Piece* p, short &threats, Who secondPieceType)
 	{
 		// No piece, no threat.
 		// Continue checking.
@@ -270,7 +275,7 @@ private:
 		}
 		// Stop checking.
 		return true;
-	}
+	}*/
 
 	void threatenCheck1Piece(Piece* p, short &threats, Who pieceType, Piece* &t)
 	{
@@ -453,53 +458,73 @@ private:
 	}
 
 	// Onko kuningasta suojaavan napin takana uhka?
-	bool isKingThreatened(short col, short row)
+	// Tämä funktio ei voi koskaan asettaa uhkaajaa kuin kerran.
+	bool isKingThreatened(short col, short row, Piece* &threatener, Direction d)
 	{
 		// Uhkien määrä (tarvitaan myöhemmin)
 		short threats = 0;
+		threatener = NULL;
 
 		// Up/Down/Left/Right: queens, rooks
-		// Up
-		for(short r = row + 1; r < 8; r++)
-		{
-			if(threatenCheck(board[r][col], threats, ROOK)) break;
-		}
-		// Right
-		for(short c = col + 1; c < 8; c++)
-		{
-			if(threatenCheck(board[row][c], threats, ROOK)) break;
-		}
-		// Down
-		for(short r = row - 1; r >= 0; r--)
-		{
-			if(threatenCheck(board[r][col], threats, ROOK)) break;
-		}
-		// Left
-		for(short c = col - 1; c >= 0; c--)
-		{
-			if(threatenCheck(board[row][c], threats, ROOK)) break;
-		}
-
 		// Sideways: queens, bishops
-		// Up-right
-		for(short r = row + 1, c = col + 1; r < 8 && c < 8; r++, c++)
+		switch(d)
 		{
-			if(threatenCheck(board[r][c], threats, BISHOP)) break;
-		}
-		// Right-down
-		for(short r = row - 1, c = col + 1; r >= 0 && c < 8; r--, c++)
-		{
-			if(threatenCheck(board[r][c], threats, BISHOP)) break;
-		}
-		// Down-left
-		for(short r = row - 1, c = col - 1; r >= 0 && c >= 0; r--, c--)
-		{
-			if(threatenCheck(board[r][c], threats, BISHOP)) break;
-		}
-		// Left-up
-		for(short r = row + 1, c = col - 1; r < 8 && c >= 0; r++, c--)
-		{
-			if(threatenCheck(board[r][c], threats, BISHOP)) break;
+		case NORTH:
+			// Up
+			for(short r = row + 1; r < 8; r++)
+			{
+				if(threatenCheck(board[r][col], threats, ROOK, threatener)) break;
+			}
+			break;
+		case NORTHEAST:
+			// Up-right
+			for(short r = row + 1, c = col + 1; r < 8 && c < 8; r++, c++)
+			{
+				if(threatenCheck(board[r][c], threats, BISHOP, threatener)) break;
+			}
+			break;
+		case EAST:
+			// Right
+			for(short c = col + 1; c < 8; c++)
+			{
+				if(threatenCheck(board[row][c], threats, ROOK, threatener)) break;
+			}
+			break;
+		case SOUTHEAST:
+			// Right-down
+			for(short r = row - 1, c = col + 1; r >= 0 && c < 8; r--, c++)
+			{
+				if(threatenCheck(board[r][c], threats, BISHOP, threatener)) break;
+			}
+			break;
+		case SOUTH:
+			// Down
+			for(short r = row - 1; r >= 0; r--)
+			{
+				if(threatenCheck(board[r][col], threats, ROOK, threatener)) break;
+			}
+			break;
+		case SOUTHWEST:
+			// Down-left
+			for(short r = row - 1, c = col - 1; r >= 0 && c >= 0; r--, c--)
+			{
+				if(threatenCheck(board[r][c], threats, BISHOP, threatener)) break;
+			}
+			break;
+		case WEST:
+			// Left
+			for(short c = col - 1; c >= 0; c--)
+			{
+				if(threatenCheck(board[row][c], threats, ROOK, threatener)) break;
+			}
+			break;
+		case NORTHWEST:
+			// Left-up
+			for(short r = row + 1, c = col - 1; r < 8 && c >= 0; r++, c--)
+			{
+				if(threatenCheck(board[r][c], threats, BISHOP, threatener)) break;
+			}
+			break;
 		}
 
 		return threats != 0;
@@ -842,18 +867,252 @@ public:
 			// Jokaisesta napista pitää tarkistaa, onko se estämässä shakkia!
 			// "Nosta" nappi pois ja katso tuleeko shakkia siitä suunnasta.
 			board[p->row][p->col] = NULL;
-			// Tutki missä suunnassa kuningas on tästä napista katsottuna.
-			// Sitten tutki kuninkaasta
-			if(isKingThreatened(king->col, king->row))
+			// Tutki missä suunnassa tämä nappi on kuninkaasta katsottuna.
+			Direction direction = NOWHERE;
+			short rowDiff = p->row - king->row, colDiff = p->col - king->col;
+			if(rowDiff < 0)
 			{
-				board[p->row][p->col] = &(*p);
-				// Tätä nappia ei voi siirtää minnekään, koska se suojaa kuningasta.
-				continue;
+				// Kuninkaan alapuolella
+				if(colDiff < 0)
+				{
+					direction = SOUTHWEST;
+				}
+				else if(colDiff > 0)
+				{
+					direction = SOUTHEAST;
+				}
+				else
+				{
+					direction = SOUTH;
+				}
+			}
+			else if(rowDiff > 0)
+			{
+				// Kuninkaan yläpuolella
+				if(colDiff < 0)
+				{
+					direction = NORTHWEST;
+				}
+				else if(colDiff > 0)
+				{
+					direction = NORTHEAST;
+				}
+				else
+				{
+					direction = NORTH;
+				}
 			}
 			else
 			{
-				board[p->row][p->col] = &(*p);
+				// Kuninkaan tasossa
+				if(colDiff < 0)
+				{
+					direction = WEST;
+				}
+				else if(colDiff > 0)
+				{
+					direction = EAST;
+				}
+				else
+				{
+					// Mahdoton (itse kuningas)
+				}
 			}
+
+			if(isKingThreatened(king->col, king->row, threatener, direction))
+			{
+				// Laitetaan nappi "takaisin" laudalle.
+				board[p->row][p->col] = &(*p);
+				// Tätä nappia ei voi siirtää pois suojaamasta kuningasta.
+				// Tarkista siirrot vain siihen suuntaan jossa uhkaaja on!
+				// Ne ovat ainoita laillisia siirtoja.
+				switch(p->who)
+				{
+				case QUEEN:
+					{
+						switch(direction)
+						{
+						case NORTH:
+							// Up
+							for(short r = p->row + 1; r < 8; r++)
+							{
+								if(moveCheck(board[r][p->col], moves, p->col, p->row, p->col, r)) break;
+							}
+							break;
+						case NORTHEAST:
+							// Up-right
+							for(short r = p->row + 1, c = p->col + 1; r < 8 && c < 8; r++, c++)
+							{
+								if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
+							}
+							break;
+						case EAST:
+							// Right
+							for(short c = p->col + 1; c < 8; c++)
+							{
+								if(moveCheck(board[p->row][c], moves, p->col, p->row, c, p->row)) break;
+							}
+							break;
+						case SOUTHEAST:
+							// Right-down
+							for(short r = p->row - 1, c = p->col + 1; r >= 0 && c < 8; r--, c++)
+							{
+								if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
+							}
+							break;
+						case SOUTH:
+							// Down
+							for(short r = p->row - 1; r >= 0; r--)
+							{
+								if(moveCheck(board[r][p->col], moves, p->col, p->row, p->col, r)) break;
+							}
+							break;
+						case SOUTHWEST:
+							// Down-left
+							for(short r = p->row - 1, c = p->col - 1; r >= 0 && c >= 0; r--, c--)
+							{
+								if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
+							}
+							break;
+						case WEST:
+							// Left
+							for(short c = p->col - 1; c >= 0; c--)
+							{
+								if(moveCheck(board[p->row][c], moves, p->col, p->row, c, p->row)) break;
+							}
+							break;
+						case NORTHWEST:
+							// Left-up
+							for(short r = p->row + 1, c = p->col - 1; r < 8 && c >= 0; r++, c--)
+							{
+								if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
+							}
+							break;
+						}
+					}
+					break;
+				case ROOK:
+					{
+						switch(direction)
+						{
+						case NORTH:
+							// Up
+							for(short r = p->row + 1; r < 8; r++)
+							{
+								if(moveCheck(board[r][p->col], moves, p->col, p->row, p->col, r)) break;
+							}
+							break;
+						case EAST:
+							// Right
+							for(short c = p->col + 1; c < 8; c++)
+							{
+								if(moveCheck(board[p->row][c], moves, p->col, p->row, c, p->row)) break;
+							}
+							break;
+						case SOUTH:
+							// Down
+							for(short r = p->row - 1; r >= 0; r--)
+							{
+								if(moveCheck(board[r][p->col], moves, p->col, p->row, p->col, r)) break;
+							}
+							break;
+						case WEST:
+							// Left
+							for(short c = p->col - 1; c >= 0; c--)
+							{
+								if(moveCheck(board[p->row][c], moves, p->col, p->row, c, p->row)) break;
+							}
+							break;
+						}
+					}
+					break;
+				case BISHOP:
+					{
+						switch(direction)
+						{
+						case NORTHEAST:
+							// Up-right
+							for(short r = p->row + 1, c = p->col + 1; r < 8 && c < 8; r++, c++)
+							{
+								if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
+							}
+							break;
+						case SOUTHEAST:
+							// Right-down
+							for(short r = p->row - 1, c = p->col + 1; r >= 0 && c < 8; r--, c++)
+							{
+								if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
+							}
+							break;
+						case SOUTHWEST:
+							// Down-left
+							for(short r = p->row - 1, c = p->col - 1; r >= 0 && c >= 0; r--, c--)
+							{
+								if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
+							}
+							break;
+						case NORTHWEST:
+							// Left-up
+							for(short r = p->row + 1, c = p->col - 1; r < 8 && c >= 0; r++, c--)
+							{
+								if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
+							}
+							break;
+						}
+					}
+					break;
+				case KNIGHT:
+					// Jos ratsu suojaa (on ainoa suojaaja), ei sitä voi siirtää minnekään.
+					break;
+				case PAWN:
+					// Sen sijaan sotilaan voi siirtää.
+					{
+						short r = p->row, c = p->col;
+						if(whoseTurn == WHITE)
+						{
+							if(r < 7) r++;
+						}
+						else
+						{
+							if(r > 0) r--;
+						}
+						// Right side
+						if(direction == SOUTHEAST || direction == NORTHEAST)
+						if(c < 7)
+						{
+							eatCheckPawn(board[r][c + 1], moves, c, p->row);
+							if(passer)
+								enPassantCheckPawn(board[p->row][c + 1], moves, c, r);
+						}
+						// Left side
+						if(direction == SOUTHWEST || direction == NORTHWEST)
+						if(c > 0)
+						{
+							eatCheckPawn(board[r][c - 1], moves, c, p->row);
+							if(passer)
+								enPassantCheckPawn(board[p->row][c - 1], moves, c, r);
+						}
+						// Move forward
+						if(direction == SOUTH || direction == NORTH)
+						if(moveCheckPawn(board[r][c], moves, c, p->row, c, r))
+						{
+							if(whoseTurn == WHITE)
+							{
+								if(r == 2)
+								moveCheckPawn(board[r + 1][c], moves, c, p->row, c, r + 1, 3);
+							}
+							else
+							{
+								if(r == 5)
+								moveCheckPawn(board[r - 1][c], moves, c, p->row, c, r - 1, 3);
+							}
+						}
+					}
+					break;
+				}
+				continue;
+			}
+			board[p->row][p->col] = &(*p);
 
 			switch(p->who)
 			{
@@ -950,13 +1209,13 @@ public:
 					}
 
 					// Then left-up
-					for(short r = p->row + 1, c = p->col - 1; r < 8 && c >= 0; r++, c--)
+					for(short r = p->row - 1, c = p->col - 1; r >= 0 && c >= 0; r--, c--)
 					{
 						if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
 					}
 
 					// Then down-left
-					for(short r = p->row - 1, c = p->col - 1; r >= 0 && c >= 0; r--, c--)
+					for(short r = p->row + 1, c = p->col - 1; r < 8 && c >= 0; r++, c--)
 					{
 						if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
 					}
