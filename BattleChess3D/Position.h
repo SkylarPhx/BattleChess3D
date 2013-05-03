@@ -451,7 +451,7 @@ private:
 		if(threats > 1) threatener = NULL;
 		return threats != 0;
 	}
-	
+
 	// Onko kuningasta suojaavan napin takana uhka?
 	bool isKingThreatened(short col, short row)
 	{
@@ -862,73 +862,49 @@ public:
 					// First up
 					for(short r = p->row + 1; r < 8; r++)
 					{
-						if(moveCheck(board[r][p->col], moves, p->col, p->row, p->col, r))
-						{
-							break;
-						}
+						if(moveCheck(board[r][p->col], moves, p->col, p->row, p->col, r)) break;
 					}
 
 					// Then up-right
 					for(short r = p->row + 1, c = p->col + 1; r < 8 && c < 8; r++, c++)
 					{
-						if(moveCheck(board[r][c], moves, p->col, p->row, c, r))
-						{
-							break;
-						}
+						if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
 					}
 
 					// Then right
 					for(short c = p->col + 1; c < 8; c++)
 					{
-						if(moveCheck(board[p->row][c], moves, p->col, p->row, c, p->row))
-						{
-							break;
-						}
+						if(moveCheck(board[p->row][c], moves, p->col, p->row, c, p->row)) break;
 					}
 
 					// Then right-down
 					for(short r = p->row - 1, c = p->col + 1; r >= 0 && c < 8; r--, c++)
 					{
-						if(moveCheck(board[r][c], moves, p->col, p->row, c, r))
-						{
-							break;
-						}
+						if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
 					}
 
 					// Then down
 					for(short r = p->row - 1; r >= 0; r--)
 					{
-						if(moveCheck(board[r][p->col], moves, p->col, p->row, p->col, r))
-						{
-							break;
-						}
+						if(moveCheck(board[r][p->col], moves, p->col, p->row, p->col, r)) break;
 					}
 
 					// Then down-left
 					for(short r = p->row - 1, c = p->col - 1; r >= 0 && c >= 0; r--, c--)
 					{
-						if(moveCheck(board[r][c], moves, p->col, p->row, c, r))
-						{
-							break;
-						}
+						if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
 					}
 
 					// Then left
 					for(short c = p->col - 1; c >= 0; c--)
 					{
-						if(moveCheck(board[p->row][c], moves, p->col, p->row, c, p->row))
-						{
-							break;
-						}
+						if(moveCheck(board[p->row][c], moves, p->col, p->row, c, p->row)) break;
 					}
 
 					// Then left-up
 					for(short r = p->row + 1, c = p->col - 1; r < 8 && c >= 0; r++, c--)
 					{
-						if(moveCheck(board[r][c], moves, p->col, p->row, c, r))
-						{
-							break;
-						}
+						if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
 					}
 				}
 				break;
@@ -937,37 +913,25 @@ public:
 					// First up
 					for(short r = p->row + 1; r < 8; r++)
 					{
-						if(moveCheck(board[r][p->col], moves, p->col, p->row, p->col, r))
-						{
-							break;
-						}
+						if(moveCheck(board[r][p->col], moves, p->col, p->row, p->col, r)) break;
 					}
 
 					// Then right
 					for(short c = p->col + 1; c < 8; c++)
 					{
-						if(moveCheck(board[p->row][c], moves, p->col, p->row, c, p->row))
-						{
-							break;
-						}
+						if(moveCheck(board[p->row][c], moves, p->col, p->row, c, p->row)) break;
 					}
 
 					// Then down
 					for(short r = p->row - 1; r >= 0; r--)
 					{
-						if(moveCheck(board[r][p->col], moves, p->col, p->row, p->col, r))
-						{
-							break;
-						}
+						if(moveCheck(board[r][p->col], moves, p->col, p->row, p->col, r)) break;
 					}
 
 					// Then left
 					for(short c = p->col - 1; c >= 0; c--)
 					{
-						if(moveCheck(board[p->row][c], moves, p->col, p->row, c, p->row))
-						{
-							break;
-						}
+						if(moveCheck(board[p->row][c], moves, p->col, p->row, c, p->row)) break;
 					}
 				}
 				break;
@@ -976,37 +940,25 @@ public:
 					// Then up-right
 					for(short r = p->row + 1, c = p->col + 1; r < 8 && c < 8; r++, c++)
 					{
-						if(moveCheck(board[r][c], moves, p->col, p->row, c, r))
-						{
-							break;
-						}
+						if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
 					}
 
 					// Then right-down
 					for(short r = p->row - 1, c = p->col + 1; r >= 0 && c < 8; r--, c++)
 					{
-						if(moveCheck(board[r][c], moves, p->col, p->row, c, r))
-						{
-							break;
-						}
+						if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
 					}
 
 					// Then left-up
 					for(short r = p->row + 1, c = p->col - 1; r < 8 && c >= 0; r++, c--)
 					{
-						if(moveCheck(board[r][c], moves, p->col, p->row, c, r))
-						{
-							break;
-						}
+						if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
 					}
 
 					// Then down-left
 					for(short r = p->row - 1, c = p->col - 1; r >= 0 && c >= 0; r--, c--)
 					{
-						if(moveCheck(board[r][c], moves, p->col, p->row, c, r))
-						{
-							break;
-						}
+						if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
 					}
 				}
 				break;
