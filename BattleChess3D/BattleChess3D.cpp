@@ -29,19 +29,6 @@ int _tmain(int argc, _TCHAR* argv[])
 			cout << "GAME ENDED!" << endl;
 			break;
 		}
-		/*for(auto &m: moves)
-		{
-			switch(position->whoIsOn(m.fromCol, m.fromRow))
-			{
-			case KING: cout << "King "; break;
-			case QUEEN: cout << "Queen "; break;
-			case ROOK: cout << "Rook "; break;
-			case BISHOP: cout << "Bishop "; break;
-			case KNIGHT: cout << "Knight "; break;
-			case PAWN: cout << "Pawn "; break;
-			}
-			printMove(m);
-		}*/
 		position.showSpecialInfo();
 		cout << "Evaluation: " << position.evaluate(0) << endl;
 		if(turn == BLACK)
@@ -55,6 +42,19 @@ int _tmain(int argc, _TCHAR* argv[])
 
 		while(turn == WHITE)
 		{
+			for(auto &m: moves)
+			{
+				switch(position.whoIsOn(m.fromCol, m.fromRow))
+				{
+				case KING: cout << "King "; break;
+				case QUEEN: cout << "Queen "; break;
+				case ROOK: cout << "Rook "; break;
+				case BISHOP: cout << "Bishop "; break;
+				case KNIGHT: cout << "Knight "; break;
+				case PAWN: cout << "Pawn "; break;
+				}
+				printMove(m);
+			}
 			cout << "\nGive a move command like e2-e4\nRanges: [a:h][1:8]" << endl;
 			getline(cin, command, '\n');
 			if(command == "exit") return 0;
