@@ -927,6 +927,7 @@ public:
 				board[p->row][p->col] = &(*p);
 				// Tätä nappia ei voi siirtää pois suojaamasta kuningasta.
 				// Tarkista siirrot vain siihen suuntaan jossa uhkaaja on!
+				// Ja myös kuninkaan suuntaan, koska kyllähän peruuttaa voi.
 				// Ne ovat ainoita laillisia siirtoja.
 				switch(p->who)
 				{
@@ -935,55 +936,51 @@ public:
 						switch(direction)
 						{
 						case NORTH:
+						case SOUTH:
 							// Up
 							for(short r = p->row + 1; r < 8; r++)
 							{
 								if(moveCheck(board[r][p->col], moves, p->col, p->row, p->col, r)) break;
 							}
-							break;
-						case NORTHEAST:
-							// Up-right
-							for(short r = p->row + 1, c = p->col + 1; r < 8 && c < 8; r++, c++)
-							{
-								if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
-							}
-							break;
-						case EAST:
-							// Right
-							for(short c = p->col + 1; c < 8; c++)
-							{
-								if(moveCheck(board[p->row][c], moves, p->col, p->row, c, p->row)) break;
-							}
-							break;
-						case SOUTHEAST:
-							// Right-down
-							for(short r = p->row - 1, c = p->col + 1; r >= 0 && c < 8; r--, c++)
-							{
-								if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
-							}
-							break;
-						case SOUTH:
 							// Down
 							for(short r = p->row - 1; r >= 0; r--)
 							{
 								if(moveCheck(board[r][p->col], moves, p->col, p->row, p->col, r)) break;
 							}
 							break;
+						case NORTHEAST:
 						case SOUTHWEST:
+							// Up-right
+							for(short r = p->row + 1, c = p->col + 1; r < 8 && c < 8; r++, c++)
+							{
+								if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
+							}
 							// Down-left
 							for(short r = p->row - 1, c = p->col - 1; r >= 0 && c >= 0; r--, c--)
 							{
 								if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
 							}
 							break;
+						case EAST:
 						case WEST:
+							// Right
+							for(short c = p->col + 1; c < 8; c++)
+							{
+								if(moveCheck(board[p->row][c], moves, p->col, p->row, c, p->row)) break;
+							}
 							// Left
 							for(short c = p->col - 1; c >= 0; c--)
 							{
 								if(moveCheck(board[p->row][c], moves, p->col, p->row, c, p->row)) break;
 							}
 							break;
+						case SOUTHEAST:
 						case NORTHWEST:
+							// Right-down
+							for(short r = p->row - 1, c = p->col + 1; r >= 0 && c < 8; r--, c++)
+							{
+								if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
+							}
 							// Left-up
 							for(short r = p->row + 1, c = p->col - 1; r < 8 && c >= 0; r++, c--)
 							{
@@ -998,27 +995,25 @@ public:
 						switch(direction)
 						{
 						case NORTH:
+						case SOUTH:
 							// Up
 							for(short r = p->row + 1; r < 8; r++)
 							{
 								if(moveCheck(board[r][p->col], moves, p->col, p->row, p->col, r)) break;
 							}
-							break;
-						case EAST:
-							// Right
-							for(short c = p->col + 1; c < 8; c++)
-							{
-								if(moveCheck(board[p->row][c], moves, p->col, p->row, c, p->row)) break;
-							}
-							break;
-						case SOUTH:
 							// Down
 							for(short r = p->row - 1; r >= 0; r--)
 							{
 								if(moveCheck(board[r][p->col], moves, p->col, p->row, p->col, r)) break;
 							}
 							break;
+						case EAST:
 						case WEST:
+							// Right
+							for(short c = p->col + 1; c < 8; c++)
+							{
+								if(moveCheck(board[p->row][c], moves, p->col, p->row, c, p->row)) break;
+							}
 							// Left
 							for(short c = p->col - 1; c >= 0; c--)
 							{
@@ -1033,27 +1028,25 @@ public:
 						switch(direction)
 						{
 						case NORTHEAST:
+						case SOUTHWEST:
 							// Up-right
 							for(short r = p->row + 1, c = p->col + 1; r < 8 && c < 8; r++, c++)
 							{
 								if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
 							}
-							break;
-						case SOUTHEAST:
-							// Right-down
-							for(short r = p->row - 1, c = p->col + 1; r >= 0 && c < 8; r--, c++)
-							{
-								if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
-							}
-							break;
-						case SOUTHWEST:
 							// Down-left
 							for(short r = p->row - 1, c = p->col - 1; r >= 0 && c >= 0; r--, c--)
 							{
 								if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
 							}
 							break;
+						case SOUTHEAST:
 						case NORTHWEST:
+							// Right-down
+							for(short r = p->row - 1, c = p->col + 1; r >= 0 && c < 8; r--, c++)
+							{
+								if(moveCheck(board[r][c], moves, p->col, p->row, c, r)) break;
+							}
 							// Left-up
 							for(short r = p->row + 1, c = p->col - 1; r < 8 && c >= 0; r++, c--)
 							{
@@ -1374,11 +1367,11 @@ public:
 			else
 				mobValue -= center[i->col][i->row];
 		}
-		return c1 * matValue + c2 * mobValue + c3 * pawnValue + c4 * moveCount;
+		return c1 * matValue + c2 * mobValue + c3 * pawnValue + c4 * moveCount + c5 * safetyValue;
 	}
 
 private:
-	short negamax(Position &pos, short depth, short a, short b, short color)
+	short negamax(Position &pos, short depth, short a, short b, short color) const
 	{
 		list<Move> moves;
 		short result = 0, moveCount = pos.generateLegalMoves(moves, result);
@@ -1413,7 +1406,7 @@ private:
 		// Debug: 4 max
 		// Release: 5-6
 		// Suurenna kun napit vähenee runsaasti?
-		short value = color * negamax(p, 3, -30000, 30000, color);
+		short value = color * negamax(p, 4, -30000, 30000, color);
 		threadLock.lock();
 		values.emplace(value, m);
 		threadLock.unlock();
