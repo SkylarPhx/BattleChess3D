@@ -22,5 +22,7 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <vector>
 
+#include <stdlib.h>
 #include <windows.h>

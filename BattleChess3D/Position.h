@@ -304,19 +304,25 @@ private:
 		}
 	}
 
-	bool isProtectingKing(Piece* p, Piece* king)
+	bool isProtectingKing(Piece* p, Piece* king, short tC, short tR)
 	{
 		short rowDiff = p->row - king->row, colDiff = p->col - king->col;
 		Direction direction = calcDirection(rowDiff, colDiff);
+		// Nappi hetkeksi pois jotta nähdään suojaako se kuningasta.
 		board[p->row][p->col] = NULL;
+		// Otetaan myös nykyinen uhkaaja pois, koska se ei saa vaikuttaa tähän.
+		Piece *t = board[tR][tC];
+		board[tR][tC] = NULL;
 		if(colDiff == 0 || rowDiff == 0 ||
 			colDiff == rowDiff || colDiff == -rowDiff)
 		if(isKingThreatened(king->col, king->row, direction))
 		{
 			board[p->row][p->col] = p;
+			board[tR][tC] = t;
 			return true;
 		}
 		board[p->row][p->col] = p;
+		board[tR][tC] = t;
 		return false;
 	}
 
@@ -328,7 +334,7 @@ private:
 		if(p->owner != whoseTurn) return true;
 		// Oma oikeantyyppinen nappi siirrettävissä kuninkaan suojeluun.
 		// Älä siirrä jos suojaa kuningasta!
-		if(isProtectingKing(p, king)) return true;
+		if(isProtectingKing(p, king, tC, tR)) return true;
 		if(p->who == QUEEN || p->who == secondPieceType)
 		{
 			m.emplace_back(p->col, p->row, tC, tR);
@@ -342,7 +348,7 @@ private:
 		if(p == NULL) return;
 		// Oma oikeantyyppinen nappi siirrettävissä kuninkaan suojeluun.
 		// Älä siirrä jos suojaa kuningasta!
-		if(isProtectingKing(p, king)) return;
+		if(isProtectingKing(p, king, tC, tR)) return;
 		if(p->owner == whoseTurn && p->who == pieceType)
 		{
 			m.emplace_back(p->col, p->row, tC, tR);
@@ -363,7 +369,7 @@ private:
 		if(p == NULL) return true;
 		// Oma oikeantyyppinen nappi siirrettävissä kuninkaan suojeluun.
 		// Älä siirrä jos suojaa kuningasta!
-		if(isProtectingKing(p, king)) return false;
+		if(isProtectingKing(p, king, tC, tR)) return false;
 		if(p->owner == whoseTurn && p->who == PAWN)
 		{
 			m.emplace_back(p->col, p->row, tC, tR, two);
@@ -844,7 +850,7 @@ public:
 		if(isKingThreatened(king->col, king->row, threatener))
 		{
 			//cout << "Check!" << endl;
-			result = (whoseTurn == WHITE) ? -1000 : 1000;
+			//result = (whoseTurn == WHITE) ? -1000 : 1000;
 
 			// Jos vain yksi vihollinen uhkaa, tarkista voiko laittaa eteen nappeja.
 			// Tämä on totta vain jos kuningasta uhataan.
@@ -888,7 +894,7 @@ public:
 			}
 
 			// Muita nappeja ei voi siirtää muualle!
-			if(moves.empty()) result += (whoseTurn == WHITE) ? 0xC000 : 0x4000;
+			if(moves.empty()) result = (whoseTurn == WHITE) ? 0xC000 : 0x4000;
 			return moves.size();
 		}
 
@@ -1323,7 +1329,7 @@ public:
 	short evaluate(short moveCount) const
 	{
 		// Kertoimet
-		short c1 = 20, c2 = 10, c4 = 1, c5 = 20;
+		short c1 = 20, c2 = 10, c4 = 1, c5 = 8;
 
 		// Normal: 78, max: 206
 		short value[6] = {0, 18, 10, 6, 6, 2};
@@ -1359,7 +1365,9 @@ public:
 		auto whiteEnd = whitePieces.end();
 		auto blackBegin = blackPieces.begin();
 		auto blackEnd = blackPieces.end();
-		short matValue = 0, mobValue = 0, pawnValue = 0, safetyValue =
+		short matValue = 0, mobValue = 0, pawnValue = 0;
+		// Huomioi linnoituksen mahdollisuus?
+		short safetyValue =
 			safety[whiteBegin->row][whiteBegin->col] -
 			safety[blackBegin->row][blackBegin->col];
 		for(auto i = whiteBegin++; i != whiteEnd; i++)
@@ -1456,7 +1464,23 @@ public:
 		}
 		auto time2 = chrono::system_clock::to_time_t(chrono::system_clock::now());
 		cout << "Time elapsed: " << (time2 - time1) << " s" << endl;
-		return (whoseTurn == WHITE) ? values.rbegin()->second : values.begin()->second;
+		vector<Move> sameValues;
+		srand(time2);
+		if(whoseTurn == WHITE)
+		{
+			for(auto i = values.rbegin()++; i != values.rend(); i++)
+			{
+				if(i->first == values.rbegin()->first)
+					sameValues.push_back(i->second);
+			}
+			return sameValues[rand() % sameValues.size()];
+		}
+		for(auto i = values.begin()++; i != values.end(); i++)
+		{
+			if(i->first == values.begin()->first)
+				sameValues.push_back(i->second);
+		}
+		return sameValues[rand() % sameValues.size()];
 	}
 
 private:
