@@ -304,13 +304,31 @@ private:
 		}
 	}
 
-	bool canMoveOwn(Piece* p, list<Move> &m, Who secondPieceType, short tC, short tR)
+	bool isProtectingKing(Piece* p, Piece* king)
+	{
+		short rowDiff = p->row - king->row, colDiff = p->col - king->col;
+		Direction direction = calcDirection(rowDiff, colDiff);
+		board[p->row][p->col] = NULL;
+		if(colDiff == 0 || rowDiff == 0 ||
+			colDiff == rowDiff || colDiff == -rowDiff)
+		if(isKingThreatened(king->col, king->row, direction))
+		{
+			board[p->row][p->col] = p;
+			return true;
+		}
+		board[p->row][p->col] = p;
+		return false;
+	}
+
+	bool canMoveOwn(Piece* p, Piece* king, list<Move> &m, Who secondPieceType, short tC, short tR)
 	{
 		// Ei nappia. Tästä ei voi siirtää kuninkaan suojeluun.
 		if(p == NULL) return false;
 		// Vihollisen nappi. Lopeta tarkistus.
 		if(p->owner != whoseTurn) return true;
 		// Oma oikeantyyppinen nappi siirrettävissä kuninkaan suojeluun.
+		// Älä siirrä jos suojaa kuningasta!
+		if(isProtectingKing(p, king)) return true;
 		if(p->who == QUEEN || p->who == secondPieceType)
 		{
 			m.emplace_back(p->col, p->row, tC, tR);
@@ -318,30 +336,34 @@ private:
 		return true;
 	}
 
-	void canMoveOwn1Piece(Piece* p, list<Move> &m, Who pieceType, short tC, short tR)
+	void canMoveOwn1Piece(Piece* p, Piece* king, list<Move> &m, Who pieceType, short tC, short tR)
 	{
 		// Ei nappia. Tästä ei voi siirtää kuninkaan suojeluun.
 		if(p == NULL) return;
 		// Oma oikeantyyppinen nappi siirrettävissä kuninkaan suojeluun.
+		// Älä siirrä jos suojaa kuningasta!
+		if(isProtectingKing(p, king)) return;
 		if(p->owner == whoseTurn && p->who == pieceType)
 		{
 			m.emplace_back(p->col, p->row, tC, tR);
 		}
 	}
 
-	void canMoveEnPassant(Piece* p, list<Move> &m, short tR, short direction)
+	void canMoveEnPassant(Piece* p, Piece* king, list<Move> &m, short tR, short direction)
 	{
 		if(p == passer)
 		{
-			canMoveOwnPawn(board[p->row][p->col + direction], m, p->col, tR, 4);
+			canMoveOwnPawn(board[p->row][p->col + direction], king, m, p->col, tR, 4);
 		}
 	}
 
-	bool canMoveOwnPawn(Piece* p, list<Move> &m, short tC, short tR, short two = 0)
+	bool canMoveOwnPawn(Piece* p, Piece* king, list<Move> &m, short tC, short tR, short two = 0)
 	{
 		// Ei nappia. Tästä ei voi siirtää kuninkaan suojeluun.
 		if(p == NULL) return true;
 		// Oma oikeantyyppinen nappi siirrettävissä kuninkaan suojeluun.
+		// Älä siirrä jos suojaa kuningasta!
+		if(isProtectingKing(p, king)) return false;
 		if(p->owner == whoseTurn && p->who == PAWN)
 		{
 			m.emplace_back(p->col, p->row, tC, tR, two);
@@ -540,53 +562,57 @@ private:
 		return threats != 0;
 	}
 
-	void checkOwnMovesToHere(list<Move> &m, short tC, short tR)
+	void checkOwnMovesToHere(list<Move> &m, short tC, short tR, Piece* king)
 	{
 		// Samanlainen tarkistus kuin uhkaamisista.
 		// Tässä vaan tarkistetaan toisin päin.
+		// VIRHE! Kuningasta jo suojaavia nappeja ei saa siirtää!
+		// Katso missä suunnassa tämä nappi on kuninkaasta.
+		// Katso suojaako se kuningasta.
+		// Jos ei, niin jatka.
 
 		// Up/Down/Left/Right: queens, rooks
 		// Up
 		for(short r = tR + 1; r < 8; r++)
 		{
-			if(canMoveOwn(board[r][tC], m, ROOK, tC, tR)) break;
+			if(canMoveOwn(board[r][tC], king, m, ROOK, tC, tR)) break;
 		}
 		// Right
 		for(short c = tC + 1; c < 8; c++)
 		{
-			if(canMoveOwn(board[tR][c], m, ROOK, tC, tR)) break;
+			if(canMoveOwn(board[tR][c], king, m, ROOK, tC, tR)) break;
 		}
 		// Down
 		for(short r = tR - 1; r >= 0; r--)
 		{
-			if(canMoveOwn(board[r][tC], m, ROOK, tC, tR)) break;
+			if(canMoveOwn(board[r][tC], king, m, ROOK, tC, tR)) break;
 		}
 		// Left
 		for(short c = tC - 1; c >= 0; c--)
 		{
-			if(canMoveOwn(board[tR][c], m, ROOK, tC, tR)) break;
+			if(canMoveOwn(board[tR][c], king, m, ROOK, tC, tR)) break;
 		}
 
 		// Sideways: queens, bishops
 		// Up-right
 		for(short r = tR + 1, c = tC + 1; r < 8 && c < 8; r++, c++)
 		{
-			if(canMoveOwn(board[r][c], m, BISHOP, tC, tR)) break;
+			if(canMoveOwn(board[r][c], king, m, BISHOP, tC, tR)) break;
 		}
 		// Right-down
 		for(short r = tR - 1, c = tC + 1; r >= 0 && c < 8; r--, c++)
 		{
-			if(canMoveOwn(board[r][c], m, BISHOP, tC, tR)) break;
+			if(canMoveOwn(board[r][c], king, m, BISHOP, tC, tR)) break;
 		}
 		// Down-left
 		for(short r = tR - 1, c = tC - 1; r >= 0 && c >= 0; r--, c--)
 		{
-			if(canMoveOwn(board[r][c], m, BISHOP, tC, tR)) break;
+			if(canMoveOwn(board[r][c], king, m, BISHOP, tC, tR)) break;
 		}
 		// Left-up
 		for(short r = tR + 1, c = tC - 1; r < 8 && c >= 0; r++, c--)
 		{
-			if(canMoveOwn(board[r][c], m, BISHOP, tC, tR)) break;
+			if(canMoveOwn(board[r][c], king, m, BISHOP, tC, tR)) break;
 		}
 
 		// Checking for knights
@@ -596,40 +622,40 @@ private:
 		{
 			// Right
 			if(c < 7)
-			canMoveOwn1Piece(board[r + 2][c + 1], m, KNIGHT, tC, tR);
+			canMoveOwn1Piece(board[r + 2][c + 1], king, m, KNIGHT, tC, tR);
 			// Left
 			if(c > 0)
-			canMoveOwn1Piece(board[r + 2][c - 1], m, KNIGHT, tC, tR);
+			canMoveOwn1Piece(board[r + 2][c - 1], king, m, KNIGHT, tC, tR);
 		}
 		// Right
 		if(c < 6)
 		{
 			// Up
 			if(r < 7)
-			canMoveOwn1Piece(board[r + 1][c + 2], m, KNIGHT, tC, tR);
+			canMoveOwn1Piece(board[r + 1][c + 2], king, m, KNIGHT, tC, tR);
 			// Down
 			if(r > 0)
-			canMoveOwn1Piece(board[r - 1][c + 2], m, KNIGHT, tC, tR);
+			canMoveOwn1Piece(board[r - 1][c + 2], king, m, KNIGHT, tC, tR);
 		}
 		// Down
 		if(r > 1)
 		{
 			// Right
 			if(c < 7)
-			canMoveOwn1Piece(board[r - 2][c + 1], m, KNIGHT, tC, tR);
+			canMoveOwn1Piece(board[r - 2][c + 1], king, m, KNIGHT, tC, tR);
 			// Left
 			if(c > 0)
-			canMoveOwn1Piece(board[r - 2][c - 1], m, KNIGHT, tC, tR);
+			canMoveOwn1Piece(board[r - 2][c - 1], king, m, KNIGHT, tC, tR);
 		}
 		// Left
 		if(c > 1)
 		{
 			// Up
 			if(r < 7)
-			canMoveOwn1Piece(board[r + 1][c - 2], m, KNIGHT, tC, tR);
+			canMoveOwn1Piece(board[r + 1][c - 2], king, m, KNIGHT, tC, tR);
 			// Down
 			if(r > 0)
-			canMoveOwn1Piece(board[r - 1][c - 2], m, KNIGHT, tC, tR);
+			canMoveOwn1Piece(board[r - 1][c - 2], king, m, KNIGHT, tC, tR);
 		}
 
 		// Checking for pawns.
@@ -651,12 +677,12 @@ private:
 			// Right side
 			if(c < 7)
 			{
-				canMoveOwn1Piece(board[r][c + 1], m, PAWN, tC, tR);
+				canMoveOwn1Piece(board[r][c + 1], king, m, PAWN, tC, tR);
 			}
 			// Left side
 			if(c > 0)
 			{
-				canMoveOwn1Piece(board[r][c - 1], m, PAWN, tC, tR);
+				canMoveOwn1Piece(board[r][c - 1], king, m, PAWN, tC, tR);
 			}
 		}
 		else
@@ -664,22 +690,22 @@ private:
 			if(passer)
 			{
 				if(c < 7)
-					canMoveEnPassant(board[r][c], m, tR, 1);
+					canMoveEnPassant(board[r][c], king, m, tR, 1);
 				if(c > 0)
-					canMoveEnPassant(board[r][c], m, tR, -1);
+					canMoveEnPassant(board[r][c], king, m, tR, -1);
 			}
 			// Can only move pawn.
-			if(canMoveOwnPawn(board[r][c], m, tC, tR))
+			if(canMoveOwnPawn(board[r][c], king, m, tC, tR))
 			{
 				if(whoseTurn == WHITE)
 				{
 					if(r == 2)
-					canMoveOwnPawn(board[r - 1][c], m, tC, tR, 3);
+					canMoveOwnPawn(board[r - 1][c], king, m, tC, tR, 3);
 				}
 				else
 				{
 					if(r == 5)
-					canMoveOwnPawn(board[r + 1][c], m, tC, tR, 3);
+					canMoveOwnPawn(board[r + 1][c], king, m, tC, tR, 3);
 				}
 			}
 		}
@@ -705,6 +731,28 @@ private:
 			return !isKingThreatened(col, row, threatener);
 		}
 		return false;
+	}
+
+	// Laske suunta perustuen rivien ja sarakkeiden erotuksiin.
+	Direction calcDirection(short rowD, short colD)
+	{
+		// Kuninkaan alapuolella
+		if(rowD < 0)
+		{
+			if(colD < 0) return SOUTHWEST;
+			if(colD > 0) return SOUTHEAST;
+			return SOUTH;
+		}
+		// Kuninkaan yläpuolella
+		if(rowD > 0)
+		{
+			if(colD < 0) return NORTHWEST;
+			if(colD > 0) return NORTHEAST;
+			return NORTH;
+		}
+		// Kuninkaan tasossa
+		if(colD < 0) return WEST;
+		return EAST;
 	}
 
 public:
@@ -806,7 +854,6 @@ public:
 				// TEE OMA FUNKTIO JOSSA TARKISTETAAN VOIKO OMAN LAITTAA RUUTUUN!
 				// Vihollistyypin perusteella katsotaan mitä ruutuja tarkistetaan!
 				short row = threatener->row, col = threatener->col;
-				// VIRHE! Kuningasta jo suojaavia nappeja ei saa siirtää!
 				switch(threatener->who)
 				{
 				case QUEEN:
@@ -817,7 +864,7 @@ public:
 						for(short r = row, c = col; r != king->row || c != king->col;)
 						{
 							// Kutsu funktiota joka tarkistaa voiko oman napin siirtää tähän kohtaan laudalla.
-							checkOwnMovesToHere(moves, c, r);
+							checkOwnMovesToHere(moves, c, r, king);
 
 							if(r > king->row) r--;
 							else if(r < king->row) r++;
@@ -830,18 +877,18 @@ public:
 				case KNIGHT:
 					// Voiko hevosen syödä?
 					// Kutsu funktiota joka tarkistaa voiko oman napin siirtää tähän kohtaan laudalla.
-					checkOwnMovesToHere(moves, col, row);
+					checkOwnMovesToHere(moves, col, row, king);
 					break;
 				case PAWN:
 					// Voiko sotilaan syödä?
 					// Kutsu funktiota joka tarkistaa voiko oman napin siirtää tähän kohtaan laudalla.
-					checkOwnMovesToHere(moves, col, row);
+					checkOwnMovesToHere(moves, col, row, king);
 					break;
 				}
 			}
 
 			// Muita nappeja ei voi siirtää muualle!
-			if(moves.empty()) result = (whoseTurn == WHITE) ? 0xBC18 : 0x43E8;
+			if(moves.empty()) result += (whoseTurn == WHITE) ? 0xC000 : 0x4000;
 			return moves.size();
 		}
 
@@ -879,60 +926,13 @@ public:
 			// "Nosta" nappi pois ja katso tuleeko shakkia siitä suunnasta.
 			board[p->row][p->col] = NULL;
 			// Tutki missä suunnassa tämä nappi on kuninkaasta katsottuna.
-			Direction direction = NOWHERE;
 			short rowDiff = p->row - king->row, colDiff = p->col - king->col;
-			if(rowDiff < 0)
-			{
-				// Kuninkaan alapuolella
-				if(colDiff < 0)
-				{
-					direction = SOUTHWEST;
-				}
-				else if(colDiff > 0)
-				{
-					direction = SOUTHEAST;
-				}
-				else
-				{
-					direction = SOUTH;
-				}
-			}
-			else if(rowDiff > 0)
-			{
-				// Kuninkaan yläpuolella
-				if(colDiff < 0)
-				{
-					direction = NORTHWEST;
-				}
-				else if(colDiff > 0)
-				{
-					direction = NORTHEAST;
-				}
-				else
-				{
-					direction = NORTH;
-				}
-			}
-			else
-			{
-				// Kuninkaan tasossa
-				if(colDiff < 0)
-				{
-					direction = WEST;
-				}
-				else if(colDiff > 0)
-				{
-					direction = EAST;
-				}
-				else
-				{
-					// Mahdoton (itse kuningas)
-				}
-			}
+			Direction direction = calcDirection(rowDiff, colDiff);
 
 			// Vain näissä tapauksissa nappi voi edes suojata kuningasta.
 			// Muissa tapauksissa on täysin hyödytöntä tehdä allaolevaa.
-			if(colDiff == 0 || rowDiff == 0 || colDiff % rowDiff == 0)
+			if(colDiff == 0 || rowDiff == 0 ||
+				colDiff == rowDiff || colDiff == -rowDiff)
 			if(isKingThreatened(king->col, king->row, direction))
 			{
 				// Laitetaan nappi "takaisin" laudalle.
@@ -1317,14 +1317,13 @@ public:
 			}
 		}
 
-		//if(moves.empty()) result = (whoseTurn == WHITE) ? 0xC000 : 0x4000;
 		return moves.size();
 	}
 
 	short evaluate(short moveCount) const
 	{
 		// Kertoimet
-		float c1 = 10, c2 = 5, c3 = 1, c4 = 0.25, c5 = 5;
+		short c1 = 20, c2 = 10, c4 = 1, c5 = 20;
 
 		// Normal: 78, max: 206
 		short value[6] = {0, 18, 10, 6, 6, 2};
@@ -1339,7 +1338,7 @@ public:
 			{1, 2, 2, 2, 2, 2, 2, 1},
 			{1, 1, 1, 1, 1, 1, 1, 1}
 		};
-		// Max: ?
+		// Max: 2
 		short safety[8][8] = {
 			{2, 2, 1, 0, 0, 1, 2, 2},
 			{2, 1, 0, 0, 0, 0, 1, 2},
@@ -1379,7 +1378,7 @@ public:
 			else
 				mobValue -= center[i->col][i->row];
 		}
-		return c1 * matValue + c2 * mobValue + c3 * pawnValue + c4 * moveCount + c5 * safetyValue;
+		return c1 * (matValue + pawnValue) + c2 * mobValue + c4 * moveCount + c5 * safetyValue;
 	}
 
 private:
@@ -1390,7 +1389,7 @@ private:
 		if(moveCount == 0)
 		{
 			// Peli päättynyt
-			return color * pos.evaluate(color * moveCount) + result;
+			return color * result;
 		}
 		if(depth == 0)
 		{
