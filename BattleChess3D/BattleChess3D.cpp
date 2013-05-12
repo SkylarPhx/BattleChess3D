@@ -20,6 +20,11 @@ int _tmain(int argc, _TCHAR* argv[])
 		Position oldPosition(position);
 		position.copyPosition(oldPosition);
 		Owner turn = position.tellTurn();
+		if(position.isDraw())
+		{
+			cout << "DRAW!" << endl;
+			break;
+		}
 		list<Move> moves;
 		short result = 0;
 		cout << "Legal moves: " << position.generateLegalMoves(moves, result) << endl;
@@ -31,9 +36,9 @@ int _tmain(int argc, _TCHAR* argv[])
 		}
 		position.showSpecialInfo();
 		cout << "Evaluation: " << position.evaluate(0) << endl;
+		Move bestMove = position.selectBestMove(moves);
 		if(turn == BLACK)
 		{
-			Move bestMove = position.selectBestMove(moves);
 			printMove(bestMove);
 			position.executeMove(bestMove);
 			moved = true;
@@ -42,7 +47,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 		while(turn == WHITE)
 		{
-			for(auto &m: moves)
+			/*for(auto &m: moves)
 			{
 				switch(position.whoIsOn(m.fromCol, m.fromRow))
 				{
@@ -54,7 +59,7 @@ int _tmain(int argc, _TCHAR* argv[])
 				case PAWN: cout << "Pawn "; break;
 				}
 				printMove(m);
-			}
+			}*/
 			cout << "\nGive a move command like e2-e4\nRanges: [a:h][1:8]" << endl;
 			getline(cin, command, '\n');
 			if(command == "exit") return 0;

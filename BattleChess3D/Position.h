@@ -69,6 +69,7 @@ private:
 	short canCastle;
 	// For en passant move.
 	Piece *passer;
+	short movesDone, lastEatMove;
 
 public:
 	Position(){}
@@ -87,20 +88,27 @@ public:
 		cout << endl;
 	}
 
-	Who whoIsOn(short col, short row)
+	Who whoIsOn(short col, short row) const
 	{
 		return board[row][col]->who;
 	}
 
+	bool isDraw() const
+	{
+		if(movesDone - lastEatMove >= 100) return true;
+		return false;
+	}
+
 	Owner tellTurn() const
 	{
+		cout << "\nMoved " << movesDone << " times. Ate " << lastEatMove << " moves ago." << endl;
 		if(whoseTurn == WHITE)
 		{
-			cout << redWhite << "\n*** White's Possible Moves ***" << greyBlack << endl;
+			cout << redWhite << "*** White's Possible Moves ***" << greyBlack << endl;
 		}
 		else
 		{
-			cout << redBlack << "\n*** Black's Possible Moves ***" << greyBlack << endl;
+			cout << redBlack << "*** Black's Possible Moves ***" << greyBlack << endl;
 		}
 		return whoseTurn;
 	}
@@ -169,6 +177,7 @@ public:
 		whoseTurn = WHITE;
 		canCastle = 15;
 		passer = NULL;
+		movesDone = lastEatMove = 0;
 	}
 
 	void copyPosition(Position &p)
@@ -190,6 +199,8 @@ public:
 		whoseTurn = p.whoseTurn;
 		canCastle = p.canCastle;
 		passer = (p.passer) ? board[p.passer->row][p.passer->col] : NULL;
+		movesDone = p.movesDone;
+		lastEatMove = p.lastEatMove;
 	}
 
 	void printColRow(short col, short row)
@@ -795,6 +806,7 @@ public:
 				// TEE OMA FUNKTIO JOSSA TARKISTETAAN VOIKO OMAN LAITTAA RUUTUUN!
 				// Vihollistyypin perusteella katsotaan mitä ruutuja tarkistetaan!
 				short row = threatener->row, col = threatener->col;
+				// VIRHE! Kuningasta jo suojaavia nappeja ei saa siirtää!
 				switch(threatener->who)
 				{
 				case QUEEN:
@@ -1406,7 +1418,7 @@ private:
 		// Debug: 4 max
 		// Release: 5-6
 		// Suurenna kun napit vähenee runsaasti?
-		short value = color * negamax(p, 4, -30000, 30000, color);
+		short value = color * negamax(p, 3, -30000, 30000, color);
 		threadLock.lock();
 		values.emplace(value, m);
 		threadLock.unlock();
@@ -1498,6 +1510,7 @@ public:
 					break;
 				}
 			}
+			lastEatMove = movesDone + 1;
 		}
 
 		Piece* from = board[m.fromRow][m.fromCol];
@@ -1576,6 +1589,7 @@ public:
 					break;
 				}
 			}
+			lastEatMove = movesDone + 1;
 		}
 
 		if(from->who == PAWN)
@@ -1598,6 +1612,7 @@ public:
 
 		// This clears the en passant possibilty.
 		passer = NULL;
+		movesDone++;
 	}
 
 	void changeTurn()
