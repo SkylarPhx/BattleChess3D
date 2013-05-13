@@ -255,14 +255,8 @@ private:
 
 	bool threatenCheck(Piece* p, short &threats, Who secondPieceType, Piece* &t)
 	{
-		// No piece, no threat.
-		// Continue checking.
 		if(p == NULL) return false;
-		// Our piece, no threat.
-		// Stop checking.
-		if(p->owner == whoseTurn) return true;
-		// Is it queen or rook/bishop = is the king threatened?
-		if(p->who == QUEEN || p->who == secondPieceType)
+		if(p->owner != whoseTurn && (p->who == QUEEN || p->who == secondPieceType))
 		{
 			t = p;
 			threats++;
@@ -271,16 +265,19 @@ private:
 		return true;
 	}
 
+	void threatenCheckKing(Piece* p, short &threats)
+	{
+		if(p != NULL && p->owner == KING) threats++;
+	}
+
 	bool threatenCheck(Piece* p, short &threats, Who secondPieceType)
 	{
 		// No piece, no threat.
 		// Continue checking.
 		if(p == NULL) return false;
 		// Our piece, no threat.
-		// Stop checking.
-		if(p->owner == whoseTurn) return true;
 		// Is it queen or rook/bishop = is the king threatened?
-		if(p->who == QUEEN || p->who == secondPieceType)
+		if(p->owner != whoseTurn && (p->who == QUEEN || p->who == secondPieceType))
 		{
 			threats++;
 		}
@@ -288,16 +285,14 @@ private:
 		return true;
 	}
 
+	void threatenCheck1Piece(Piece* p, short &threats, Who pieceType)
+	{
+		if(p != NULL && p->owner != whoseTurn && p->who == pieceType) threats++;
+	}
+
 	void threatenCheck1Piece(Piece* p, short &threats, Who pieceType, Piece* &t)
 	{
-		// No piece, no threat.
-		// Continue checking.
-		if(p == NULL) return;
-		// Our piece, no threat.
-		// Stop checking.
-		if(p->owner == whoseTurn) return;
-		// Is it knight or pawn = is the king threatened?
-		if(p->who == pieceType)
+		if(p != NULL && p->owner != whoseTurn && p->who == pieceType)
 		{
 			t = p;
 			threats++;
@@ -375,6 +370,134 @@ private:
 			m.emplace_back(p->col, p->row, tC, tR, two);
 		}
 		return false;
+	}
+
+	bool isKingThreatened(short col, short row)
+	{
+		// Uhkien määrä (tarvitaan myöhemmin)
+		short threats = 0;
+
+		// Enemy king
+		if(row < R8)
+		{
+			threatenCheckKing(board[row + 1][col], threats);
+			if(col < H) threatenCheckKing(board[row + 1][col + 1], threats);
+		}
+		if(col < H)
+		{
+			threatenCheckKing(board[row][col + 1], threats);
+			if(row > R1) threatenCheckKing(board[row - 1][col + 1], threats);
+		}
+		if(row > R1)
+		{
+			threatenCheckKing(board[row - 1][col], threats);
+			if(col > A) threatenCheckKing(board[row - 1][col - 1], threats);
+		}
+		if(col > A)
+		{
+			threatenCheckKing(board[row][col - 1], threats);
+			if(row < R8) threatenCheckKing(board[row + 1][col - 1], threats);
+		}
+
+		// Up/Down/Left/Right: queens, rooks
+		// Up
+		for(short r = row + 1; r < 8; r++)
+		{
+			if(threatenCheck(board[r][col], threats, ROOK)) break;
+		}
+		// Right
+		for(short c = col + 1; c < 8; c++)
+		{
+			if(threatenCheck(board[row][c], threats, ROOK)) break;
+		}
+		// Down
+		for(short r = row - 1; r >= 0; r--)
+		{
+			if(threatenCheck(board[r][col], threats, ROOK)) break;
+		}
+		// Left
+		for(short c = col - 1; c >= 0; c--)
+		{
+			if(threatenCheck(board[row][c], threats, ROOK)) break;
+		}
+
+		// Sideways: queens, bishops
+		// Up-right
+		for(short r = row + 1, c = col + 1; r < 8 && c < 8; r++, c++)
+		{
+			if(threatenCheck(board[r][c], threats, BISHOP)) break;
+		}
+		// Right-down
+		for(short r = row - 1, c = col + 1; r >= 0 && c < 8; r--, c++)
+		{
+			if(threatenCheck(board[r][c], threats, BISHOP)) break;
+		}
+		// Down-left
+		for(short r = row - 1, c = col - 1; r >= 0 && c >= 0; r--, c--)
+		{
+			if(threatenCheck(board[r][c], threats, BISHOP)) break;
+		}
+		// Left-up
+		for(short r = row + 1, c = col - 1; r < 8 && c >= 0; r++, c--)
+		{
+			if(threatenCheck(board[r][c], threats, BISHOP)) break;
+		}
+
+		// Checking for knights
+		short r = row, c = col;
+		// Up
+		if(r < 6)
+		{
+			// Right
+			if(c < 7) threatenCheck1Piece(board[r + 2][c + 1], threats, KNIGHT);
+			// Left
+			if(c > 0) threatenCheck1Piece(board[r + 2][c - 1], threats, KNIGHT);
+		}
+		// Right
+		if(c < 6)
+		{
+			// Up
+			if(r < 7) threatenCheck1Piece(board[r + 1][c + 2], threats, KNIGHT);
+			// Down
+			if(r > 0) threatenCheck1Piece(board[r - 1][c + 2], threats, KNIGHT);
+		}
+		// Down
+		if(r > 1)
+		{
+			// Right
+			if(c < 7) threatenCheck1Piece(board[r - 2][c + 1], threats, KNIGHT);
+			// Left
+			if(c > 0) threatenCheck1Piece(board[r - 2][c - 1], threats, KNIGHT);
+		}
+		// Left
+		if(c > 1)
+		{
+			// Up
+			if(r < 7) threatenCheck1Piece(board[r + 1][c - 2], threats, KNIGHT);
+			// Down
+			if(r > 0) threatenCheck1Piece(board[r - 1][c - 2], threats, KNIGHT);
+		}
+
+		// Checking for pawns.
+		if(whoseTurn == WHITE)
+		{
+			// No threat from pawns.
+			if(row == 7) goto SkipPawns;
+			row++;
+		}
+		else
+		{
+			// No threat from pawns.
+			if(row == 0) goto SkipPawns;
+			row--;
+		}
+		// Right side
+		if(col < 7) threatenCheck1Piece(board[row][col + 1], threats, PAWN);
+		// Left side
+		if(col > 0) threatenCheck1Piece(board[row][col - 1], threats, PAWN);
+		SkipPawns:
+
+		return threats != 0;
 	}
 
 	bool isKingThreatened(short col, short row, Piece* &threatener)
@@ -722,9 +845,8 @@ private:
 		if(p == NULL || p->owner != whoseTurn)
 		{
 			// Uhataanko tätä ruutua?
-			Piece *threatener = NULL;
-			if(!isKingThreatened(tC, tR, threatener))
-			m.emplace_back(fC, fR, tC, tR);
+			if(!isKingThreatened(tC, tR))
+				m.emplace_back(fC, fR, tC, tR);
 		}
 	}
 
@@ -1403,18 +1525,21 @@ private:
 		{
 			return color * pos.evaluate(color * moveCount);
 		}
-		short max = -30000;
+		//short max = -30000;
 		for(Move &m: moves)
 		{
 			Position p(pos);
 			p.executeMove(m);
 			p.changeTurn();
 			short value = -negamax(p, depth - 1, -b, -a, -color);
-			if(value > max) max = value;
-			if(max > a) a = max;
-			if(a >= b) return a;
+			//if(value > max) max = value;
+			//if(max > a) a = max;
+			//if(a >= b) return a;
+			if(value >= b) return b;
+			if(value > a) a = value;
 		}
-		return max;
+		//return max;
+		return a;
 	}
 
 	void minmax(Move m, multimap<short, Move> &values, short color)
@@ -1546,8 +1671,8 @@ public:
 		board[m.fromRow][m.fromCol] = NULL;
 		if(from == NULL) return;
 		// Change the location of movable chess piece.
-		from->row = m.toRow;
-		from->col = m.toCol;
+		from->row = (Rank)m.toRow;
+		from->col = (File)m.toCol;
 
 		if(canCastle)
 		switch(from->who)

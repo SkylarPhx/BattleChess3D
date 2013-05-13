@@ -36,6 +36,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		}
 		position.showSpecialInfo();
 		cout << "Evaluation: " << position.evaluate(0) << endl;
+
 		Move bestMove = position.selectBestMove(moves);
 		if(turn == BLACK)
 		{
