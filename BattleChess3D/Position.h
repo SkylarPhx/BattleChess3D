@@ -101,7 +101,7 @@ public:
 
 	Owner tellTurn() const
 	{
-		cout << "\nMoved " << movesDone << " times. Ate " << lastEatMove << " moves ago." << endl;
+		cout << "\nMoved " << movesDone << " times. Ate " << (movesDone - lastEatMove) << " moves ago." << endl;
 		if(whoseTurn == WHITE)
 		{
 			cout << redWhite << "*** White's Possible Moves ***" << greyBlack << endl;
@@ -1329,7 +1329,7 @@ public:
 	short evaluate(short moveCount) const
 	{
 		// Kertoimet
-		short c1 = 20, c2 = 10, c4 = 1, c5 = 8;
+		short c1 = 20, c2 = 10, c4 = 1, c5 = 7;
 
 		// Normal: 78, max: 206
 		short value[6] = {0, 18, 10, 6, 6, 2};
@@ -1470,17 +1470,21 @@ public:
 		{
 			for(auto i = values.rbegin()++; i != values.rend(); i++)
 			{
-				if(i->first == values.rbegin()->first)
+				if(i->first - values.rbegin()->first > -5)
 					sameValues.push_back(i->second);
 			}
-			return sameValues[rand() % sameValues.size()];
 		}
-		for(auto i = values.begin()++; i != values.end(); i++)
+		else
 		{
-			if(i->first == values.begin()->first)
-				sameValues.push_back(i->second);
+			for(auto i = values.begin()++; i != values.end(); i++)
+			{
+				if(i->first - values.begin()->first < 5)
+					sameValues.push_back(i->second);
+			}
 		}
-		return sameValues[rand() % sameValues.size()];
+		short pick = rand() % sameValues.size();
+		cout << pick << " : " << sameValues.size() << endl;
+		return sameValues[pick];
 	}
 
 private:
