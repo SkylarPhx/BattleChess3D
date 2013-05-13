@@ -350,13 +350,13 @@ private:
 		}
 	}
 
-	void canMoveEnPassant(Piece* p, Piece* king, list<Move> &m, short row, short direction)
+	/*void canMoveEnPassant(Piece* p, Piece* king, list<Move> &m, short row, short direction)
 	{
 		if(p == passer)
 		{
 			canMoveOwnPawn(board[p->row][p->col + direction], king, m, p->col, p->row + row, 4);
 		}
-	}
+	}*/
 
 	bool canMoveOwnPawn(Piece* p, Piece* king, list<Move> &m, short tC, short tR, short two = 0)
 	{
@@ -799,37 +799,38 @@ private:
 			if(r == 0) return;
 			r--;
 		}
-		c = tC;
 		// Can move pawn to eat.
 		if(board[tR][tC] != NULL)
 		{
 			// Right side
-			if(c < 7)
+			if(tC < 7)
 			{
-				canMoveOwn1Piece(board[r][c + 1], king, m, PAWN, tC, tR);
-				if(passer) canMoveEnPassant(board[tR][tC], king, m, tR - r, 1);
+				canMoveOwn1Piece(board[r][tC + 1], king, m, PAWN, tC, tR);
+				if(passer == board[tR][tC])
+					canMoveOwnPawn(board[tR][tC + 1], king, m, tC, tR + tR - r, 4);
 			}
 			// Left side
-			if(c > 0)
+			if(tC > 0)
 			{
-				canMoveOwn1Piece(board[r][c - 1], king, m, PAWN, tC, tR);
-				if(passer) canMoveEnPassant(board[tR][tC], king, m, tR - r, -1);
+				canMoveOwn1Piece(board[r][tC - 1], king, m, PAWN, tC, tR);
+				if(passer == board[tR][tC])
+					canMoveOwnPawn(board[tR][tC - 1], king, m, tC, tR + tR - r, 4);
 			}
 		}
 		else
 		{
 			// Can only move pawn.
-			if(canMoveOwnPawn(board[r][c], king, m, tC, tR))
+			if(canMoveOwnPawn(board[r][tC], king, m, tC, tR))
 			{
 				if(whoseTurn == WHITE)
 				{
 					if(r == 2)
-					canMoveOwnPawn(board[r - 1][c], king, m, tC, tR, 3);
+					canMoveOwnPawn(board[r - 1][tC], king, m, tC, tR, 3);
 				}
 				else
 				{
 					if(r == 5)
-					canMoveOwnPawn(board[r + 1][c], king, m, tC, tR, 3);
+					canMoveOwnPawn(board[r + 1][tC], king, m, tC, tR, 3);
 				}
 			}
 		}
