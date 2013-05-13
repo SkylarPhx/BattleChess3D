@@ -267,7 +267,7 @@ private:
 
 	void threatenCheckKing(Piece* p, short &threats)
 	{
-		if(p != NULL && p->owner == KING) threats++;
+		if(p != NULL && p->who == KING) threats++;
 	}
 
 	bool threatenCheck(Piece* p, short &threats, Who secondPieceType)
@@ -350,11 +350,11 @@ private:
 		}
 	}
 
-	void canMoveEnPassant(Piece* p, Piece* king, list<Move> &m, short tR, short direction)
+	void canMoveEnPassant(Piece* p, Piece* king, list<Move> &m, short row, short direction)
 	{
 		if(p == passer)
 		{
-			canMoveOwnPawn(board[p->row][p->col + direction], king, m, p->col, tR, 4);
+			canMoveOwnPawn(board[p->row][p->col + direction], king, m, p->col, p->row + row, 4);
 		}
 	}
 
@@ -695,7 +695,7 @@ private:
 	{
 		// Samanlainen tarkistus kuin uhkaamisista.
 		// Tässä vaan tarkistetaan toisin päin.
-		// VIRHE! Kuningasta jo suojaavia nappeja ei saa siirtää!
+		// Kuningasta jo suojaavia nappeja ei saa siirtää!
 		// Katso missä suunnassa tämä nappi on kuninkaasta.
 		// Katso suojaako se kuningasta.
 		// Jos ei, niin jatka.
@@ -807,22 +807,17 @@ private:
 			if(c < 7)
 			{
 				canMoveOwn1Piece(board[r][c + 1], king, m, PAWN, tC, tR);
+				if(passer) canMoveEnPassant(board[tR][tC], king, m, tR - r, 1);
 			}
 			// Left side
 			if(c > 0)
 			{
 				canMoveOwn1Piece(board[r][c - 1], king, m, PAWN, tC, tR);
+				if(passer) canMoveEnPassant(board[tR][tC], king, m, tR - r, -1);
 			}
 		}
 		else
 		{
-			if(passer)
-			{
-				if(c < 7)
-					canMoveEnPassant(board[r][c], king, m, tR, 1);
-				if(c > 0)
-					canMoveEnPassant(board[r][c], king, m, tR, -1);
-			}
 			// Can only move pawn.
 			if(canMoveOwnPawn(board[r][c], king, m, tC, tR))
 			{
@@ -845,8 +840,7 @@ private:
 		if(p == NULL || p->owner != whoseTurn)
 		{
 			// Uhataanko tätä ruutua?
-			if(!isKingThreatened(tC, tR))
-				m.emplace_back(fC, fR, tC, tR);
+			if(!isKingThreatened(tC, tR)) m.emplace_back(fC, fR, tC, tR);
 		}
 	}
 
