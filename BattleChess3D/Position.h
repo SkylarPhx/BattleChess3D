@@ -267,7 +267,7 @@ private:
 
 	void threatenCheckKing(Piece* p, short &threats)
 	{
-		if(p != NULL && p->who == KING) threats++;
+		if(p != NULL && p->who == KING && p->owner != whoseTurn) threats++;
 	}
 
 	bool threatenCheck(Piece* p, short &threats, Who secondPieceType)
@@ -850,8 +850,7 @@ private:
 		if(p == NULL)
 		{
 			// Uhataanko tätä ruutua?
-			Piece *threatener = NULL;
-			return !isKingThreatened(col, row, threatener);
+			return !isKingThreatened(col, row);
 		}
 		return false;
 	}
@@ -876,6 +875,32 @@ private:
 		// Kuninkaan tasossa
 		if(colD < 0) return WEST;
 		return EAST;
+	}
+
+	void kingSideCastling(list<Move> &m, Piece* king)
+	{
+		if(whoseTurn == WHITE && (canCastle & 1) || whoseTurn == BLACK && (canCastle & 4))
+		{
+			for(short c = king->col + 1; c < H; c++)
+			{
+				if(!isClearPath(board[king->row][c], c, king->row)) return;
+			}
+			// Luo tornitussiirto
+			m.emplace_back(E, king->row, G, king->row, 1);
+		}
+	}
+
+	void queenSideCastling(list<Move> &m, Piece* king)
+	{
+		if(whoseTurn == WHITE && (canCastle & 2) || whoseTurn == BLACK && (canCastle & 8))
+		{
+			for(short c = king->col - 1; c > B; c--)
+			{
+				if(!isClearPath(board[king->row][c], c, king->row)) return;
+			}
+			// Luo tornitussiirto
+			m.emplace_back(E, king->row, C, king->row, 2);
+		}
 	}
 
 public:
@@ -1016,31 +1041,8 @@ public:
 		}
 
 		// Tarkista tornitus
-		if(whoseTurn == WHITE && (canCastle & 1) || whoseTurn == BLACK && (canCastle & 4))
-		{
-			for(short c = king->col + 1; c < H; c++)
-			{
-				if(!isClearPath(board[king->row][c], c, king->row))
-				{
-					goto EndOfCastlingCheck;
-				}
-			}
-			// Luo tornitussiirto
-			moves.emplace_back(E, king->row, G, king->row, 1);
-		}
-		if(whoseTurn == WHITE && (canCastle & 2) || whoseTurn == BLACK && (canCastle & 8))
-		{
-			for(short c = king->col - 1; c > B; c--)
-			{
-				if(!isClearPath(board[king->row][c], c, king->row))
-				{
-					goto EndOfCastlingCheck;
-				}
-			}
-			// Luo tornitussiirto
-			moves.emplace_back(E, king->row, C, king->row, 2);
-		}
-		EndOfCastlingCheck:
+		kingSideCastling(moves, king);
+		queenSideCastling(moves, king);
 
 		// Sitten loput napit
 		for(auto p = (*playersPieces).begin()++; p != (*playersPieces).end(); p++)
@@ -1545,7 +1547,7 @@ private:
 		// Debug: 4 max
 		// Release: 5-6
 		// Suurenna kun napit vähenee runsaasti?
-		short value = color * negamax(p, 3, -30000, 30000, color);
+		short value = color * negamax(p, 4, -30000, 30000, color);
 		threadLock.lock();
 		values.emplace(value, m);
 		threadLock.unlock();
