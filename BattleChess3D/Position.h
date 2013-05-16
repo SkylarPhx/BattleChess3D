@@ -1516,7 +1516,8 @@ private:
 		if(moveCount == 0)
 		{
 			// Peli päättynyt
-			return color * result;
+			// Nopeampi matti arvokkaammaksi.
+			return color * (result - color * 100 * depth);
 		}
 		if(depth == 0)
 		{
@@ -1547,7 +1548,7 @@ private:
 		// Debug: 4 max
 		// Release: 5-6
 		// Suurenna kun napit vähenee runsaasti?
-		short value = color * negamax(p, 4, -30000, 30000, color);
+		short value = color * negamax(p, 3, -30000, 30000, color);
 		threadLock.lock();
 		values.emplace(value, m);
 		threadLock.unlock();
