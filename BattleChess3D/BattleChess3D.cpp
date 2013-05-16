@@ -118,5 +118,6 @@ int _tmain(int argc, _TCHAR* argv[])
 		// Turn changes.
 		if(moved) position.changeTurn();
 	}
+	cin.get();
 	return 0;
 }
