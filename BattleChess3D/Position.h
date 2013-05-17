@@ -894,6 +894,7 @@ private:
 	{
 		if(whoseTurn == WHITE && (canCastle & 2) || whoseTurn == BLACK && (canCastle & 8))
 		{
+			if(board[king->row][B] != NULL) return;
 			for(short c = king->col - 1; c > B; c--)
 			{
 				if(!isClearPath(board[king->row][c], c, king->row)) return;
