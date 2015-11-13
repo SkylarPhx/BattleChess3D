@@ -1,9 +1,11 @@
 #include "stdafx.h"
+#include <atomic>
 #include "Pieces.h"
 #include "ConsoleColor.h"
 using namespace std;
 
 mutex threadLock;
+atomic<int> negamaxed, piecesEaten;
 
 class Move
 {
@@ -88,11 +90,6 @@ public:
 		cout << endl;
 	}
 
-	Who whoIsOn(short col, short row) const
-	{
-		return board[row][col]->who;
-	}
-
 	bool isDraw() const
 	{
 		if(movesDone - lastEatMove >= 100) return true;
@@ -101,15 +98,15 @@ public:
 
 	Owner tellTurn() const
 	{
-		cout << "\nMoved " << movesDone << " times. Ate " << (movesDone - lastEatMove) << " moves ago." << endl;
-		if(whoseTurn == WHITE)
+		cout << /*"\nMoved " << movesDone << " times. Ate " << (movesDone - lastEatMove) << " moves ago." <<*/ endl;
+		/*if(whoseTurn == WHITE)
 		{
 			cout << redWhite << "*** White's Possible Moves ***" << greyBlack << endl;
 		}
 		else
 		{
 			cout << redBlack << "*** Black's Possible Moves ***" << greyBlack << endl;
-		}
+		}*/
 		return whoseTurn;
 	}
 
@@ -1490,7 +1487,7 @@ public:
 		short safetyValue =
 			safety[whiteBegin->row][whiteBegin->col] -
 			safety[blackBegin->row][blackBegin->col];
-		for(auto i = whiteBegin++; i != whiteEnd; i++)
+		for(auto i = ++whiteBegin; i != whiteEnd; i++)
 		{
 			matValue += value[i->who];
 			if(i->who == PAWN)
@@ -1498,7 +1495,7 @@ public:
 			else
 				mobValue += center[i->col][i->row]; // liian korkea kerroin tällä hetkellä
 		}
-		for(auto i = blackBegin++; i != blackEnd; i++)
+		for(auto i = ++blackBegin; i != blackEnd; i++)
 		{
 			matValue -= value[i->who];
 			if(i->who == PAWN)
@@ -1512,6 +1509,7 @@ public:
 private:
 	short negamax(Position &pos, short depth, short a, short b, short color) const
 	{
+		++negamaxed;
 		list<Move> moves;
 		short result = 0, moveCount = pos.generateLegalMoves(moves, result);
 		if(moveCount == 0)
@@ -1558,6 +1556,7 @@ private:
 public:
 	Move selectBestMove(list<Move> &moves)
 	{
+		negamaxed = piecesEaten = 0;
 		cout << "AI negamax:" << endl;
 		list<thread> threads;
 		multimap<short, Move> values;
@@ -1587,6 +1586,8 @@ public:
 			cout << " : " << i->first << endl;
 		}
 		auto time2 = chrono::system_clock::to_time_t(chrono::system_clock::now());
+		cout << "Negamax used " << negamaxed << " times" << endl;
+		cout << "Pieces eaten " << piecesEaten << endl;
 		cout << "Time elapsed: " << (time2 - time1) << " s" << endl;
 		vector<Move> sameValues;
 		srand(time2);
@@ -1662,6 +1663,7 @@ public:
 				}
 			}
 			lastEatMove = movesDone + 1;
+			++piecesEaten;
 		}
 
 		Piece* from = board[m.fromRow][m.fromCol];
@@ -1815,7 +1817,7 @@ public:
 		}
 		cout << "    a  b  c  d  e  f  g  h" << endl;
 
-		cout << "\n White" << endl;
+		/*cout << "\n White" << endl;
 		for(auto &p: whitePieces)
 		{
 			p.debugPrint();
@@ -1828,6 +1830,6 @@ public:
 			p.debugPrint();
 			cout << (char)(p.col + 97) << (p.row + 1) << " ";
 		}
-		cout << endl;
+		cout << endl;*/
 	}
 };

@@ -1,3 +1,11 @@
+Debug/
+ipch/
+Release/
+x64/
+*.suo
+*.sdf
+*.opensdf
+
 # Compiled Object files
 *.slo
 *.lo
