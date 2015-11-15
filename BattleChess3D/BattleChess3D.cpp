@@ -5,6 +5,36 @@
 #include "Position.h"
 using namespace std;
 
+// Normal: 78, max: 206
+const short Position::value[6] = { 0, 18, 10, 6, 6, 2 };
+// Max: 48
+const short Position::center[8][8] = {
+	{ 1, 1, 1, 1, 1, 1, 1, 1 },
+	{ 1, 2, 2, 2, 2, 2, 2, 1 },
+	{ 1, 2, 3, 3, 3, 3, 2, 1 },
+	{ 1, 2, 3, 3, 3, 3, 2, 1 },
+	{ 1, 2, 3, 3, 3, 3, 2, 1 },
+	{ 1, 2, 3, 3, 3, 3, 2, 1 },
+	{ 1, 2, 2, 2, 2, 2, 2, 1 },
+	{ 1, 1, 1, 1, 1, 1, 1, 1 }
+};
+// Max: 2
+const short Position::safety[8][8] = {
+	{ 2, 2, 1, 0, 0, 1, 2, 2 },
+	{ 2, 1, 0, 0, 0, 0, 1, 2 },
+	{ 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ 2, 1, 0, 0, 0, 0, 1, 2 },
+	{ 2, 2, 1, 0, 0, 1, 2, 2 }
+};
+// Max: 32
+const short Position::promotion[2][8] = {
+	{ 0, 3, 1, 0, 0, 0, 0, 0 }, // Black
+	{ 0, 0, 0, 0, 0, 1, 3, 0 }  // White
+};
+
 int _tmain(int argc, _TCHAR* argv[])
 {
 	Position position;
@@ -26,9 +56,9 @@ int _tmain(int argc, _TCHAR* argv[])
 			break;
 		}
 		list<Move> moves;
-		short result = 0;
-		cout << "Legal moves: " << position.generateLegalMoves(moves, result) << endl;
-		if((signed char)result) cout << "Check!" << endl;
+		list<Piece*> threats;
+		cout << "Legal moves: " << position.generateLegalMoves(moves, threats) << endl;
+		if(threats.size()) cout << "Check!" << endl;
 		if(moves.empty())
 		{
 			cout << "GAME ENDED!" << endl;

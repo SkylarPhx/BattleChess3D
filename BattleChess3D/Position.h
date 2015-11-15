@@ -73,6 +73,17 @@ private:
 	Piece *passer;
 	short movesDone, lastEatMove;
 
+	// Kertoimet
+	static const short c1 = 20, c2 = 10, c4 = 1, c5 = 7;
+	// Normal: 78, max: 206
+	static const short value[6];
+	// Max: 48
+	static const short center[8][8];
+	// Max: 2
+	static const short safety[8][8];
+	// Max: 32
+	static const short promotion[2][8];
+
 public:
 	Position(){}
 	Position(Position &p)
@@ -250,13 +261,12 @@ private:
 		}
 	}
 
-	bool threatenCheck(Piece* p, short &threats, Who secondPieceType, Piece* &t)
+	bool threatenCheck(Piece* p, list<Piece*> &threats, Who secondPieceType)
 	{
 		if(p == NULL) return false;
 		if(p->owner != whoseTurn && (p->who == QUEEN || p->who == secondPieceType))
 		{
-			t = p;
-			threats++;
+			threats.emplace_back(p);
 		}
 		// Stop checking.
 		return true;
@@ -287,12 +297,11 @@ private:
 		if(p != NULL && p->owner != whoseTurn && p->who == pieceType) threats++;
 	}
 
-	void threatenCheck1Piece(Piece* p, short &threats, Who pieceType, Piece* &t)
+	void threatenCheck1Piece(Piece* p, list<Piece*> &threats, Who pieceType)
 	{
 		if(p != NULL && p->owner != whoseTurn && p->who == pieceType)
 		{
-			t = p;
-			threats++;
+			threats.emplace_back(p);
 		}
 	}
 
@@ -497,53 +506,50 @@ private:
 		return threats != 0;
 	}
 
-	bool isKingThreatened(short col, short row, Piece* &threatener)
+	bool isKingThreatened(short col, short row, list<Piece*> &threats)
 	{
-		// Uhkien määrä (tarvitaan myöhemmin)
-		short threats = 0;
-
 		// Up/Down/Left/Right: queens, rooks
 		// Up
 		for(short r = row + 1; r < 8; r++)
 		{
-			if(threatenCheck(board[r][col], threats, ROOK, threatener)) break;
+			if(threatenCheck(board[r][col], threats, ROOK)) break;
 		}
 		// Right
 		for(short c = col + 1; c < 8; c++)
 		{
-			if(threatenCheck(board[row][c], threats, ROOK, threatener)) break;
+			if(threatenCheck(board[row][c], threats, ROOK)) break;
 		}
 		// Down
 		for(short r = row - 1; r >= 0; r--)
 		{
-			if(threatenCheck(board[r][col], threats, ROOK, threatener)) break;
+			if(threatenCheck(board[r][col], threats, ROOK)) break;
 		}
 		// Left
 		for(short c = col - 1; c >= 0; c--)
 		{
-			if(threatenCheck(board[row][c], threats, ROOK, threatener)) break;
+			if(threatenCheck(board[row][c], threats, ROOK)) break;
 		}
 
 		// Sideways: queens, bishops
 		// Up-right
 		for(short r = row + 1, c = col + 1; r < 8 && c < 8; r++, c++)
 		{
-			if(threatenCheck(board[r][c], threats, BISHOP, threatener)) break;
+			if(threatenCheck(board[r][c], threats, BISHOP)) break;
 		}
 		// Right-down
 		for(short r = row - 1, c = col + 1; r >= 0 && c < 8; r--, c++)
 		{
-			if(threatenCheck(board[r][c], threats, BISHOP, threatener)) break;
+			if(threatenCheck(board[r][c], threats, BISHOP)) break;
 		}
 		// Down-left
 		for(short r = row - 1, c = col - 1; r >= 0 && c >= 0; r--, c--)
 		{
-			if(threatenCheck(board[r][c], threats, BISHOP, threatener)) break;
+			if(threatenCheck(board[r][c], threats, BISHOP)) break;
 		}
 		// Left-up
 		for(short r = row + 1, c = col - 1; r < 8 && c >= 0; r++, c--)
 		{
-			if(threatenCheck(board[r][c], threats, BISHOP, threatener)) break;
+			if(threatenCheck(board[r][c], threats, BISHOP)) break;
 		}
 
 		// Checking for knights
@@ -553,40 +559,40 @@ private:
 		{
 			// Right
 			if(c < 7)
-			threatenCheck1Piece(board[r + 2][c + 1], threats, KNIGHT, threatener);
+			threatenCheck1Piece(board[r + 2][c + 1], threats, KNIGHT);
 			// Left
 			if(c > 0)
-			threatenCheck1Piece(board[r + 2][c - 1], threats, KNIGHT, threatener);
+			threatenCheck1Piece(board[r + 2][c - 1], threats, KNIGHT);
 		}
 		// Right
 		if(c < 6)
 		{
 			// Up
 			if(r < 7)
-			threatenCheck1Piece(board[r + 1][c + 2], threats, KNIGHT, threatener);
+			threatenCheck1Piece(board[r + 1][c + 2], threats, KNIGHT);
 			// Down
 			if(r > 0)
-			threatenCheck1Piece(board[r - 1][c + 2], threats, KNIGHT, threatener);
+			threatenCheck1Piece(board[r - 1][c + 2], threats, KNIGHT);
 		}
 		// Down
 		if(r > 1)
 		{
 			// Right
 			if(c < 7)
-			threatenCheck1Piece(board[r - 2][c + 1], threats, KNIGHT, threatener);
+			threatenCheck1Piece(board[r - 2][c + 1], threats, KNIGHT);
 			// Left
 			if(c > 0)
-			threatenCheck1Piece(board[r - 2][c - 1], threats, KNIGHT, threatener);
+			threatenCheck1Piece(board[r - 2][c - 1], threats, KNIGHT);
 		}
 		// Left
 		if(c > 1)
 		{
 			// Up
 			if(r < 7)
-			threatenCheck1Piece(board[r + 1][c - 2], threats, KNIGHT, threatener);
+			threatenCheck1Piece(board[r + 1][c - 2], threats, KNIGHT);
 			// Down
 			if(r > 0)
-			threatenCheck1Piece(board[r - 1][c - 2], threats, KNIGHT, threatener);
+			threatenCheck1Piece(board[r - 1][c - 2], threats, KNIGHT);
 		}
 
 		// Checking for pawns.
@@ -604,16 +610,13 @@ private:
 		}
 		// Right side
 		if(col < 7)
-		threatenCheck1Piece(board[row][col + 1], threats, PAWN, threatener);
+		threatenCheck1Piece(board[row][col + 1], threats, PAWN);
 		// Left side
 		if(col > 0)
-		threatenCheck1Piece(board[row][col - 1], threats, PAWN, threatener);
+		threatenCheck1Piece(board[row][col - 1], threats, PAWN);
 		SkipPawns:
 
-		// Useita uhkaajia.
-		// Siispä ei ole mahdollista laittaa eteen mitään.
-		if(threats > 1) threatener = NULL;
-		return threats != 0;
+		return threats.size() != 0;
 	}
 
 	// Onko kuningasta suojaavan napin takana uhka?
@@ -902,7 +905,7 @@ private:
 	}
 
 public:
-	short generateLegalMoves(list<Move> &moves, short &result)
+	short generateLegalMoves(list<Move> &moves, list<Piece*> &threats)
 	{
 		// • Käydään läpi vuorossa olevan pelaajan nappulat.
 		// • Ensimmäisenä on aina kuningas.
@@ -926,7 +929,6 @@ public:
 
 		// Kuninkaan käsittely tähän
 		Piece *king = &(*(*playersPieces).begin());
-		Piece *threatener = NULL;
 
 		// Voiko kuningas liikkua?
 		{
@@ -987,18 +989,19 @@ public:
 		}
 
 		// Uhataanko?
-		if(isKingThreatened(king->col, king->row, threatener))
+		if(isKingThreatened(king->col, king->row, threats))
 		{
 			//cout << "Check!" << endl;
 			//result = (whoseTurn == WHITE) ? -1000 : 1000;
 
 			// Jos vain yksi vihollinen uhkaa, tarkista voiko laittaa eteen nappeja.
 			// Tämä on totta vain jos kuningasta uhataan.
-			if(threatener != NULL)
+			if(1 == threats.size())
 			{
 				// Tarkista pelkästään voiko tähän väliin laittaa nappeja.
 				// TEE OMA FUNKTIO JOSSA TARKISTETAAN VOIKO OMAN LAITTAA RUUTUUN!
 				// Vihollistyypin perusteella katsotaan mitä ruutuja tarkistetaan!
+				Piece *threatener = threats.front();
 				short row = threatener->row, col = threatener->col;
 				switch(threatener->who)
 				{
@@ -1034,7 +1037,7 @@ public:
 			}
 
 			// Muita nappeja ei voi siirtää muualle!
-			if(moves.empty()) result = (whoseTurn == WHITE) ? 0xC000 : 0x4000;
+			//if(moves.empty()) result = (whoseTurn == WHITE) ? 0xC000 : 0x4000;
 			return moves.size();
 		}
 
@@ -1445,39 +1448,6 @@ public:
 
 	short evaluate(short moveCount) const
 	{
-		// Kertoimet
-		short c1 = 20, c2 = 10, c4 = 1, c5 = 7;
-
-		// Normal: 78, max: 206
-		short value[6] = {0, 18, 10, 6, 6, 2};
-		// Max: 48
-		short center[8][8] = {
-			{1, 1, 1, 1, 1, 1, 1, 1},
-			{1, 2, 2, 2, 2, 2, 2, 1},
-			{1, 2, 3, 3, 3, 3, 2, 1},
-			{1, 2, 3, 3, 3, 3, 2, 1},
-			{1, 2, 3, 3, 3, 3, 2, 1},
-			{1, 2, 3, 3, 3, 3, 2, 1},
-			{1, 2, 2, 2, 2, 2, 2, 1},
-			{1, 1, 1, 1, 1, 1, 1, 1}
-		};
-		// Max: 2
-		short safety[8][8] = {
-			{2, 2, 1, 0, 0, 1, 2, 2},
-			{2, 1, 0, 0, 0, 0, 1, 2},
-			{0, 0, 0, 0, 0, 0, 0, 0},
-			{0, 0, 0, 0, 0, 0, 0, 0},
-			{0, 0, 0, 0, 0, 0, 0, 0},
-			{0, 0, 0, 0, 0, 0, 0, 0},
-			{2, 1, 0, 0, 0, 0, 1, 2},
-			{2, 2, 1, 0, 0, 1, 2, 2}
-		};
-		// Max: 32
-		short promotion[2][8] = {
-			{0, 3, 1, 0, 0, 0, 0, 0}, // Black
-			{0, 0, 0, 0, 0, 1, 3, 0}  // White
-		};
-
 		auto whiteBegin = whitePieces.begin();
 		auto whiteEnd = whitePieces.end();
 		auto blackBegin = blackPieces.begin();
@@ -1511,12 +1481,13 @@ private:
 	{
 		++negamaxed;
 		list<Move> moves;
-		short result = 0, moveCount = pos.generateLegalMoves(moves, result);
+		list<Piece*> threats;
+		short moveCount = pos.generateLegalMoves(moves, threats);
 		if(moveCount == 0)
 		{
 			// Peli päättynyt
 			// Nopeampi matti arvokkaammaksi.
-			return color * (result - color * 100 * depth);
+			return 0x1000 * -depth * threats.size();
 		}
 		if(depth == 0)
 		{
